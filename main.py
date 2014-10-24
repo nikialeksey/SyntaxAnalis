@@ -16,6 +16,3 @@ for typeLexem in iter(sc):
 
 print(types)
 print(image)
-
-
-print('hello')
