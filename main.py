@@ -14,5 +14,5 @@ for typeLexem in iter(sc):
     types.append(lId.lexemIdToStr[typeLexem])
     image.append(sc.lexeme)
 
-print(types)
-print(image)
+# print(types)
+# print(image)
