@@ -1,4 +1,6 @@
 from Analisys import Scanner
+from Analisys import Syntax
+from Analisys import SyntaxException
 import LexemId as lId
 
 fprog = open("input.txt", "r")
@@ -7,12 +9,12 @@ for line in fprog:
     program += line
 program += "\0"
 
-sc = Scanner(program)
-types = []
-image = []
-for typeLexem in iter(sc):
-    types.append(lId.lexemIdToStr[typeLexem])
-    image.append(sc.lexeme)
+scanner = Scanner(program)
+syntax = Syntax(scanner)
 
-# print(types)
-# print(image)
+try:
+    syntax.main_program()
+except SyntaxException as e:
+    print(e)
+else:
+    print('Синтаксис не содержит ошибок')
