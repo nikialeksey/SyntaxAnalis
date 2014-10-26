@@ -433,7 +433,8 @@ class Syntax:
         lexeme1 = sc.next_lexeme()
 
         while lexeme1 != lId.TCloseFigure:
-            if lexeme1 == lId.TId and self.is_data_type(sc.lexeme):  # ????????????????????????
+            if lexeme1 == lId.TId and sc.lexeme != "do" and \
+                   sc.lexeme != "return" and sc.next_lexeme() == lId.TId:
                 sc.set_pointer(old_pointer)
                 self.description_var()
             else:

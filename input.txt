@@ -2,7 +2,7 @@ int a = (a+b)*2777;
 
 
 int main() {
-    int b = jk-j--;
+    integer b = jk-j--;
     do {
         b = 8 * 90 + 1000;
     } while(1);
