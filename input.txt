@@ -1,2 +1,9 @@
-int a=, b;
-short b,c,d,s,l;
+int a = (a+b)*2777;
+
+
+int main() {
+    int b = jk-j--;
+    do {
+        b = 8 * 90 + 1000;
+    } while(1);
+}
