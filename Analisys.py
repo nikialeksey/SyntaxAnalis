@@ -139,7 +139,16 @@ class Scanner:
         else:
             self.__put_next_char_into_lexeme_buffer()
             self.lexemeId = lId.TError
+
+        if self.lexemeId == lId.TId:
+            self.lexemeId = self.identifier_recognition(self.lexeme)
         return self.lexemeId
+
+    def identifier_recognition(self, lexeme):
+        for type in lId.keyWords:
+            if lexeme == lId.keyWords[type]:
+                return type
+        return lId.TId
 
     def __put_next_char_into_lexeme_buffer(self):
         self.lexeme += self.program[self.__pointer]
@@ -267,7 +276,7 @@ class Syntax:
             lexeme_open_bracket = sc.next_lexeme()
 
             sc.set_pointer(old_pointer)
-            if lexeme_data_type == lId.TId and \
+            if self.is_data_type(lexeme_data_type) and \
                             lexeme_name_var == lId.TId and \
                             lexeme_open_bracket != lId.TOpen:
                 self.description_var()
@@ -277,7 +286,7 @@ class Syntax:
     def description_var(self):
         sc = self.scanner
         lexeme_data_type = sc.next_lexeme()
-        if lexeme_data_type != lId.TId:
+        if not self.is_data_type(lexeme_data_type):
             raise SyntaxExceptionType(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
         self.enum_var()
         lexeme_semicolon = sc.next_lexeme()
@@ -390,7 +399,7 @@ class Syntax:
                 raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), ")", sc.lexeme)
         elif sc.next_lexeme() == lId.TOpen:
             sc.set_pointer(old_pointer)
-            self.head_function()
+            self.call_function()
         else:
             sc.set_pointer(old_pointer)
             lexeme_operand = sc.next_lexeme()
@@ -400,7 +409,7 @@ class Syntax:
     def description_function(self):
         sc = self.scanner
         lexeme_data_type = sc.next_lexeme()
-        if lexeme_data_type != lId.TId:
+        if not self.is_data_type(lexeme_data_type):
             raise SyntaxExceptionType(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
         self.head_function()
         self.body_function()
@@ -413,9 +422,70 @@ class Syntax:
         lexeme_open_bracket = sc.next_lexeme()
         if lexeme_open_bracket != lId.TOpen:
             raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), "(", sc.lexeme)
+        self.enum_param()
         lexeme_close_bracket = sc.next_lexeme()
         if lexeme_close_bracket != lId.TClose:
             raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), ")", sc.lexeme)
+
+    def enum_param(self):
+        sc = self.scanner
+        old_pointer = sc.get_pointer()
+        lexeme = sc.next_lexeme()
+        if lexeme != lId.TClose:
+            sc.set_pointer(old_pointer)
+            self.param()
+
+            old_pointer = sc.get_pointer()
+            lexeme = sc.next_lexeme()
+            while lexeme == lId.TComma:
+                self.param()
+                old_pointer = sc.get_pointer()
+                lexeme = sc.next_lexeme()
+        sc.set_pointer(old_pointer)
+
+    def param(self):
+        sc = self.scanner
+        lexeme = sc.next_lexeme()
+        if not self.is_data_type(lexeme):
+            raise SyntaxExceptionType(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+        lexeme = sc.next_lexeme()
+        if lexeme != lId.TId:
+            raise SyntaxExceptionIdentifier(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+
+    def call_function(self):
+        sc = self.scanner
+        lexeme_id = sc.next_lexeme()
+        if lexeme_id != lId.TId:
+            raise SyntaxExceptionIdentifier(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+        lexeme_open_bracket = sc.next_lexeme()
+        if lexeme_open_bracket != lId.TOpen:
+            raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), "(", sc.lexeme)
+        self.enum_operand()
+        lexeme_close_bracket = sc.next_lexeme()
+        if lexeme_close_bracket != lId.TClose:
+            raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), ")", sc.lexeme)
+
+    def enum_operand(self):
+        sc = self.scanner
+        old_pointer = sc.get_pointer()
+        lexeme = sc.next_lexeme()
+        if lexeme != lId.TClose:
+            sc.set_pointer(old_pointer)
+            self.operand()
+
+            old_pointer = sc.get_pointer()
+            lexeme = sc.next_lexeme()
+            while lexeme == lId.TComma:
+                self.operand()
+                old_pointer = sc.get_pointer()
+                lexeme = sc.next_lexeme()
+        sc.set_pointer(old_pointer)
+
+    def operand(self):
+        sc = self.scanner
+        lexeme = sc.next_lexeme()
+        if lexeme != lId.TId and lexeme != lId.TNum10 and lexeme != lId.TNum16:
+            raise SyntaxExceptionOperand(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
 
     def body_function(self):
         sc = self.scanner
@@ -430,18 +500,17 @@ class Syntax:
     def enum_operator(self):
         sc = self.scanner
         old_pointer = sc.get_pointer()
-        lexeme1 = sc.next_lexeme()
+        lexeme = sc.next_lexeme()
 
-        while lexeme1 != lId.TCloseFigure:
-            if lexeme1 == lId.TId and sc.lexeme != "do" and \
-                   sc.lexeme != "return" and sc.next_lexeme() == lId.TId:
+        while lexeme != lId.TCloseFigure:
+            if self.is_data_type(lexeme):
                 sc.set_pointer(old_pointer)
                 self.description_var()
             else:
                 sc.set_pointer(old_pointer)
                 self.operator()
             old_pointer = sc.get_pointer()
-            lexeme1 = sc.next_lexeme()
+            lexeme = sc.next_lexeme()
         sc.set_pointer(old_pointer)
 
     def operator(self):
@@ -453,10 +522,10 @@ class Syntax:
             self.body_function()
         elif lexeme == lId.TSemicolon:
             ...
-        elif lexeme == lId.TId and sc.lexeme == "do":
+        elif lexeme == lId.TDo:
             self.operator()
             lexeme_while = sc.next_lexeme()
-            if lexeme_while != lId.TId or sc.lexeme != "while":
+            if lexeme_while != lId.TWhile:
                 raise SyntaxExceptionWhile(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
             lexeme_open_bracket = sc.next_lexeme()
             if lexeme_open_bracket != lId.TOpen:
@@ -468,7 +537,7 @@ class Syntax:
             lexeme_semicolon = sc.next_lexeme()
             if lexeme_semicolon != lId.TSemicolon:
                 raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), ";", sc.lexeme)
-        elif lexeme == lId.TId and sc.lexeme == "return":
+        elif lexeme == lId.TReturn:
             self.expression()
             lexeme_semicolon = sc.next_lexeme()
             if lexeme_semicolon != lId.TSemicolon:
@@ -481,11 +550,11 @@ class Syntax:
                 raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), ";", sc.lexeme)
 
     @staticmethod
-    def is_data_type(lexeme):
+    def is_data_type(lexeme_id):
         """
         Проверяет тип лексемы c типами данных
         """
-        return lexeme == "int" or lexeme == "short" or lexeme == "long"
+        return lexeme_id == lId.TInt or lexeme_id == lId.TShort or lexeme_id == lId.TLong
 
 
 if __name__ == "__main__":

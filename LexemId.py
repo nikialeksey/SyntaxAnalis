@@ -46,3 +46,5 @@ lexemIdToStr = {TId: "identifier", TNum10: "decimal", TNum16: "hex", TInt: "int"
                 TUnEq: "!=", TAssign: "=", TPlusAssign: "+=", TMinusAssign: "-=",
                 TDivAssign: "/=", TModAssign: "%=", TMulAssign: "*=", TComma: ",",
                 TSemicolon: ";", TError: "error", TEndFile: "end file"}
+
+keyWords = {TDo: "do", TReturn: "return", TWhile: "while", TShort: "short", TInt: "int", TLong: "long"}

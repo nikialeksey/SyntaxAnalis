@@ -1,9 +1,11 @@
 int a = (a+b)*2777;
+int b;
 
-
-int main() {
-    integer b = jk-j--;
+int main(int a,short lon) {
+    int b = jk-j--;
     do {
         b = 8 * 90 + 1000;
     } while(1);
+
+    tor(a, 10,b, ccc , 0x9);
 }
