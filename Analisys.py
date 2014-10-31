@@ -141,10 +141,10 @@ class Scanner:
             self.lexemeId = lId.TError
 
         if self.lexemeId == lId.TId:
-            self.lexemeId = self.identifier_recognition(self.lexeme)
+            self.lexemeId = self.__identifier_recognition(self.lexeme)
         return self.lexemeId
 
-    def identifier_recognition(self, lexeme):
+    def __identifier_recognition(self, lexeme):
         for type in lId.keyWords:
             if lexeme == lId.keyWords[type]:
                 return type
