@@ -1,0 +1,25 @@
+main_program ::= (description_var | description_function) *
+description_var ::= 'data_type' enum_var ';'
+enum_var ::= head_var (',' head_var)*
+head_var ::= name_var ('=' expression | )
+description_function ::= 'data_type' head_function body_function
+
+head_function ::= name_var '(' enum_var_func ')'
+enum_var_func ::= param (',' param)*
+param ::= 'data_type' name_var
+
+call_function ::= name_var '(' enum_operand ')'
+enum_operand ::= operand (',' operand)*
+operand ::= name_var | num10 | num16
+
+body_function ::= '{' enum_oparator '}'
+enum_operator ::= (operator | description_var)*
+operator ::= body_function | expression ';' | 'do' operator 'while' '(' expression ')' ';' | 'return' expression ';' | ';'
+
+expression ::= A2 (('=' | '+=' | '-=' | '*=' | '/=' | '%=') A2)*
+A2 ::= A3 (('==' | '!=') A3)*
+A3 ::= A4 (('>' | '<' | '<=' | '>=') A4)*
+A4 ::= A5 (('+' | '-') A5)*
+A5 ::= A6 (('*' | '\' | '%') A6)*
+A6 ::= ('-' | '+' | '--' | '++') A7| A7 ('--'|'++'|)
+A7 ::= '(' expression ')' | operand | call_function
