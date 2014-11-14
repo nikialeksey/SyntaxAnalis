@@ -14,7 +14,7 @@ syntax = Syntax(scanner)
 
 try:
     syntax.main_program()
-except SyntaxException as e:
+except Exception as e:
     print(e)
 else:
     print('Синтаксис не содержит ошибок')
