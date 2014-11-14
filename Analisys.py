@@ -373,21 +373,28 @@ class SemanticTree:
             p = p.get_parent()
             self.pointer = p
 
-    def is_describe_var_early(self, lexeme):
+    def is_describe_var_early(self, lexeme_line, lexeme_position, lexeme):
         p = self.pointer
         while p != self.__root:
-            if p.lexeme == lexeme and p.type_object == self.variable_object:
-                return True
+            if p.lexeme == lexeme:
+                if p.type_object == self.variable_object:
+                    return True
+                else:
+                    raise SemanticExceptionOverlayVar(lexeme_line, lexeme_position, lexeme)
             p = p.get_parent()
-        return False
+        raise SemanticExceptionUndescribeVar(lexeme_line, lexeme_position, lexeme)
 
-    def is_describe_function_early(self, lexeme, count_parameter):
+    def is_describe_function_early(self, lexeme_line, lexeme_position, lexeme, count_parameter):
         p = self.pointer
         while p != self.__root:
-            if p.lexeme == lexeme and p.count_parameter == count_parameter and p.type_object == self.function_object:
+            if p.lexeme == lexeme:
+                if p.type_object != self.function_object:
+                    raise SemanticExceptionOverlayFunction(lexeme_line, lexeme_position, lexeme)
+                if p.count_parameter != count_parameter:
+                    raise SemanticExceptionUndescribeFunction(lexeme_line, lexeme_position, lexeme)
                 return True
             p = p.get_parent()
-        return False
+        raise SemanticExceptionUndescribeFunction(lexeme_line, lexeme_position, lexeme)
 
     def is_overlay_lexeme(self, lexeme):
         p = self.pointer
@@ -475,11 +482,14 @@ class Syntax:
         if lexeme_id != lId.TId:
             raise SyntaxExceptionIdentifier(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
 
-        # semantic
         if self.semantic_tree.is_overlay_lexeme(sc.lexeme):
             raise SemanticExceptionOverlayVar(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+
+        lexeme = sc.lexeme
+
         # semantic
-        self.semantic_tree.add_neighbor(self.semantic_tree.variable_object, sc.lexeme, 0)
+        self.semantic_tree.add_neighbor(self.semantic_tree.variable_object, lexeme, 0)
+        # semantic
 
         old_pointer = sc.get_pointer()
         lexeme_assign = sc.next_lexeme()
@@ -494,7 +504,7 @@ class Syntax:
         old_pointer = sc.get_pointer()
         lexeme_assign = sc.next_lexeme()
         while lexeme_assign == lId.TAssign or lexeme_assign == lId.TPlusAssign or lexeme_assign == lId.TMinusAssign or \
-                lexeme_assign == lId.TMulAssign or lexeme_assign == lId.TDivAssign or lexeme_assign == lId.TModAssign:
+                        lexeme_assign == lId.TMulAssign or lexeme_assign == lId.TDivAssign or lexeme_assign == lId.TModAssign:
             self.a2()
             old_pointer = sc.get_pointer()
             lexeme_assign = sc.next_lexeme()
@@ -517,7 +527,7 @@ class Syntax:
         old_pointer = sc.get_pointer()
         lexeme_lege = sc.next_lexeme()
         while lexeme_lege == lId.TLess or lexeme_lege == lId.TGreater or \
-                lexeme_lege == lId.TLessEq or lexeme_lege == lId.TGreaterEq:
+                        lexeme_lege == lId.TLessEq or lexeme_lege == lId.TGreaterEq:
             self.a4()
             old_pointer = sc.get_pointer()
             lexeme_lege = sc.next_lexeme()
@@ -550,7 +560,7 @@ class Syntax:
         old_pointer = sc.get_pointer()
         lexeme_pref = sc.next_lexeme()
         if lexeme_pref == lId.TMinus or lexeme_pref == lId.TPlus or \
-                lexeme_pref == lId.TMinusMinus or lexeme_pref == lId.TPlusPlus:
+                        lexeme_pref == lId.TMinusMinus or lexeme_pref == lId.TPlusPlus:
             self.a7()
         else:
             sc.set_pointer(old_pointer)
@@ -579,8 +589,8 @@ class Syntax:
                 raise SyntaxExceptionOperand(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
 
             # semantic
-            if lexeme_operand == lId.TId and (not self.semantic_tree.is_describe_var_early(sc.lexeme)):
-                raise SemanticExceptionUndescribeVar(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+            if lexeme_operand == lId.TId:
+                self.semantic_tree.is_describe_var_early(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
             # semantic
 
     def description_function(self):
@@ -673,6 +683,8 @@ class Syntax:
 
         # semantic
         lexeme = sc.lexeme
+        lexeme_line = sc.get_pointer_line()
+        lexeme_position = sc.get_pointer_position()
         self.semantic_tree.current_count_parameter = 0
         # semantic
 
@@ -685,8 +697,7 @@ class Syntax:
             raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), ")", sc.lexeme)
 
         # semantic
-        if not self.semantic_tree.is_describe_function_early(lexeme, self.semantic_tree.current_count_parameter):
-            raise SemanticExceptionUndescribeFunction(sc.get_pointer_line(), sc.get_pointer_position(), lexeme)
+        self.semantic_tree.is_describe_function_early(lexeme_line, lexeme_position, lexeme, self.semantic_tree.current_count_parameter)
         # semantic
 
     def enum_operand(self):
@@ -695,25 +706,22 @@ class Syntax:
         lexeme = sc.next_lexeme()
         if lexeme != lId.TClose:
             sc.set_pointer(old_pointer)
-            self.operand()
+            self.expression()
+
+            # semantic
+            self.semantic_tree.current_count_parameter += 1
+            # semantic
 
             old_pointer = sc.get_pointer()
             lexeme = sc.next_lexeme()
             while lexeme == lId.TComma:
-                self.operand()
+                self.expression()
+                # semantic
+                self.semantic_tree.current_count_parameter += 1
+                # semantic
                 old_pointer = sc.get_pointer()
                 lexeme = sc.next_lexeme()
         sc.set_pointer(old_pointer)
-
-    def operand(self):
-        sc = self.scanner
-        lexeme = sc.next_lexeme()
-        if lexeme != lId.TId and lexeme != lId.TNum10 and lexeme != lId.TNum16:
-            raise SyntaxExceptionOperand(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
-
-        # semantic
-        self.semantic_tree.current_count_parameter += 1
-        # semantic
 
     def body_function(self):
         sc = self.scanner
