@@ -273,7 +273,7 @@ class SemanticExceptionUndescribe(SemanticException):
 
     def __str__(self):
         return "В строке " + str(self.line) + " в позиции " + str(self.position) +\
-                " не описана " + str(self.type_lexeme) + " " + str(self.lexeme)
+                " неизвестная " + str(self.type_lexeme) + " " + str(self.lexeme)
 
 
 class SemanticExceptionUndescribeVar(SemanticExceptionUndescribe):
@@ -292,7 +292,7 @@ class SemanticExceptionOverlay(SemanticException):
 
     def __str__(self):
         return "В строке " + str(self.line) + " в позиции " + str(self.position) +\
-                " использовано второй раз имя " + str(self.lexeme)
+                " ожидалась " + str(self.type_lexeme) + " " + str(self.lexeme)
 
 
 class SemanticExceptionOverlayVar(SemanticExceptionOverlay):
@@ -303,6 +303,24 @@ class SemanticExceptionOverlayVar(SemanticExceptionOverlay):
 class SemanticExceptionOverlayFunction(SemanticExceptionOverlay):
     def __init__(self, line, position, lexeme):
         super(SemanticExceptionOverlayFunction, self).__init__(line, position, "функция", lexeme)
+
+
+class SemanticExceptionOverlayFunctionParam(SemanticExceptionOverlay):
+    def __init__(self, line, position, lexeme):
+        super(SemanticExceptionOverlayFunctionParam, self).__init__(line, position, "функция", lexeme)
+
+    def __str__(self):
+        return "В строке " + str(self.line) + " в позиции " + str(self.position) +\
+                " не правильное количество параметров у функции " + str(self.lexeme)
+
+
+class SemanticExceptionOverlayLexeme(SemanticException):
+    def __init__(self, line, position, lexeme):
+        super(SemanticExceptionOverlayLexeme, self).__init__(line, position, "лексема", lexeme)
+
+    def __str__(self):
+        return "В строке " + str(self.line) + " в позиции " + str(self.position) +\
+                " дважды используемая лексема " + str(self.lexeme)
 
 
 class Node:
@@ -380,21 +398,21 @@ class SemanticTree:
                 if p.type_object == self.variable_object:
                     return True
                 else:
-                    raise SemanticExceptionOverlayVar(lexeme_line, lexeme_position, lexeme)
+                    raise SemanticExceptionOverlayFunction(lexeme_line, lexeme_position, lexeme)
             p = p.get_parent()
-        raise SemanticExceptionUndescribeVar(lexeme_line, lexeme_position, lexeme)
+        return False
 
     def is_describe_function_early(self, lexeme_line, lexeme_position, lexeme, count_parameter):
         p = self.pointer
         while p != self.__root:
             if p.lexeme == lexeme:
                 if p.type_object != self.function_object:
-                    raise SemanticExceptionOverlayFunction(lexeme_line, lexeme_position, lexeme)
+                    raise SemanticExceptionOverlayVar(lexeme_line, lexeme_position, lexeme)
                 if p.count_parameter != count_parameter:
-                    raise SemanticExceptionUndescribeFunction(lexeme_line, lexeme_position, lexeme)
+                    raise SemanticExceptionOverlayFunctionParam(lexeme_line, lexeme_position, lexeme)
                 return True
             p = p.get_parent()
-        raise SemanticExceptionUndescribeFunction(lexeme_line, lexeme_position, lexeme)
+        return False
 
     def is_overlay_lexeme(self, lexeme):
         p = self.pointer
@@ -483,7 +501,7 @@ class Syntax:
             raise SyntaxExceptionIdentifier(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
 
         if self.semantic_tree.is_overlay_lexeme(sc.lexeme):
-            raise SemanticExceptionOverlayVar(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+            raise SemanticExceptionOverlayLexeme(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
 
         lexeme = sc.lexeme
 
@@ -590,7 +608,8 @@ class Syntax:
 
             # semantic
             if lexeme_operand == lId.TId:
-                self.semantic_tree.is_describe_var_early(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+                if not self.semantic_tree.is_describe_var_early(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme):
+                    raise SemanticExceptionUndescribeVar(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
             # semantic
 
     def description_function(self):
@@ -618,7 +637,7 @@ class Syntax:
 
         # semantic
         if self.semantic_tree.is_overlay_lexeme(sc.lexeme):
-            raise SemanticExceptionOverlayFunction(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+            raise SemanticExceptionOverlayLexeme(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
         self.semantic_tree.add_neighbor(self.semantic_tree.function_object, sc.lexeme, 0)
         self.semantic_tree.current_count_parameter = 0
         pointer = self.semantic_tree.pointer
@@ -697,7 +716,8 @@ class Syntax:
             raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), ")", sc.lexeme)
 
         # semantic
-        self.semantic_tree.is_describe_function_early(lexeme_line, lexeme_position, lexeme, self.semantic_tree.current_count_parameter)
+        if not self.semantic_tree.is_describe_function_early(lexeme_line, lexeme_position, lexeme, self.semantic_tree.current_count_parameter):
+            raise SemanticExceptionUndescribeFunction(lexeme_line, lexeme_position, lexeme)
         # semantic
 
     def enum_operand(self):

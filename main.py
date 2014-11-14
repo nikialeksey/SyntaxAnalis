@@ -1,7 +1,5 @@
 from Analisys import Scanner
 from Analisys import Syntax
-from Analisys import SyntaxException
-import LexemId as lId
 
 fprog = open("input.txt", "r")
 program = ""

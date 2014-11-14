@@ -1,20 +1,2 @@
-int a, b;
-int fun(int a) {
-    {
-        int a,b,d;
-        d = fun(d + a);
-    }
-    a = a + b;
-    int b = fun(a);
-    {
-        int b, x = b;
-    }
-    int bb;
-}
-
-int main(){
-    {
-        a = fun(2);
-    }
-    int fun = fun;
-}
+int b;
+int b;
