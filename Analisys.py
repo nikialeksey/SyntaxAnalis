@@ -259,9 +259,138 @@ class SyntaxExceptionWhile(SyntaxException):
         super(SyntaxExceptionWhile, self).__init__(line, position, "while", founded)
 
 
+class SemanticException(Exception):
+    def __init__(self, line, position, type_lexeme, lexeme):
+        self.line = line
+        self.position = position
+        self.type_lexeme = type_lexeme
+        self.lexeme = lexeme
+
+
+class SemanticExceptionUndescribe(SemanticException):
+    def __init__(self, line, position, type_lexeme, lexeme):
+        super(SemanticExceptionUndescribe, self).__init__(line, position, type_lexeme, lexeme)
+
+    def __str__(self):
+        return "В строке " + str(self.line) + " в позиции " + str(self.position) +\
+                " не описана " + str(self.type_lexeme) + " " + str(self.lexeme)
+
+
+class SemanticExceptionUndescribeVar(SemanticExceptionUndescribe):
+    def __init__(self, line, position, lexeme):
+        super(SemanticExceptionUndescribeVar, self).__init__(line, position, "переменная", lexeme)
+
+
+class SemanticExceptionUndescribeFunction(SemanticExceptionUndescribe):
+    def __init__(self, line, position, lexeme):
+        super(SemanticExceptionUndescribeFunction, self).__init__(line, position, "функция", lexeme)
+
+
+class Node:
+    def __init__(self, type_object, type_data, lexeme, count_parameter):
+        self.type_object = type_object
+        self.type_data = type_data
+        self.lexeme = lexeme
+        self.count_parameter = count_parameter
+
+    def set_left_node(self, node):
+        self.__left = node
+
+    def set_right_node(self, node):
+        self.__right = node
+
+    def set_parent_node(self, node):
+        self.__parent = node
+
+    def get_left(self):
+        return self.__left
+
+    def get_right(self):
+        return self.__right
+
+    def get_parent(self):
+        return self.__parent
+
+
+class SemanticTree:
+    def __init__(self):
+        self.variable_object = 0
+        self.function_object = 1
+        self.special_object = 2
+        self.dummy = Node(-1, -1, -1, -1)
+        root = Node(self.special_object, -1, -1, -1)
+
+        self.__root = root
+        self.__root.set_left_node(self.dummy)
+        self.__root.set_right_node(self.dummy)
+        self.__root.set_parent_node(self.dummy)
+        self.pointer = root
+        self.__current_type = lId.TInt
+        self.current_count_parameter = 0
+
+    def get_current_type(self):
+        return self.__current_type
+
+    def set_current_type(self, current_type):
+        self.__current_type = current_type
+
+    def go_left(self):
+        if self.pointer.get_left() != self.dummy:
+            self.pointer = self.pointer.get_left()
+
+    def go_right(self):
+        if self.pointer.get_right() != self.dummy:
+            self.pointer = self.pointer.get_right()
+
+    def is_describe_var_early(self, lexeme):
+        p = self.pointer
+        while p != self.__root:
+            if p.lexeme == lexeme and p.type_object == self.variable_object:
+                return True
+            p = p.get_parent()
+        return False
+
+    def is_describe_function_early(self, lexeme, count_parameter):
+        p = self.pointer
+        while p != self.__root:
+            if p.lexeme == lexeme and p.count_parameter == count_parameter and p.type_object == self.function_object:
+                return True
+            p = p.get_parent()
+        return False
+
+    def is_overlay_lexeme(self, lexeme):
+        p = self.pointer
+        while p.type_object != self.special_object:
+            if p.lexeme == lexeme:
+                return True
+            p = p.get_parent()
+        return False
+
+    def add_neighbor(self, type_object, lexeme, count_parameter):
+        neighbor = Node(type_object, self.__current_type, lexeme, count_parameter)
+        neighbor.set_left_node(self.dummy)
+        neighbor.set_right_node(self.dummy)
+        neighbor.set_parent_node(self.pointer)
+        self.pointer.set_left_node(neighbor)
+        self.pointer = neighbor
+
+    def add_special_node(self):
+        special = Node(self.special_object, -1, -1, -1)
+        special.set_left_node(self.dummy)
+        special.set_right_node(self.dummy)
+        special.set_parent_node(self.pointer)
+        self.pointer.set_right_node(special)
+        self.pointer = special
+
+    def add_child(self, type_object, lexeme, count_parameter):
+        self.add_special_node()
+        self.add_neighbor(type_object, self.__current_type, lexeme, count_parameter)
+
+
 class Syntax:
     def __init__(self, scanner):
         self.scanner = scanner
+        self.semantic_tree = SemanticTree()
 
     def main_program(self):
         sc = self.scanner
@@ -288,6 +417,11 @@ class Syntax:
         lexeme_data_type = sc.next_lexeme()
         if not self.is_data_type(lexeme_data_type):
             raise SyntaxExceptionType(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+
+        # semantic
+        self.semantic_tree.set_current_type(lexeme_data_type)
+        # semantic
+
         self.enum_var()
         lexeme_semicolon = sc.next_lexeme()
         if lexeme_semicolon != lId.TSemicolon:
@@ -309,6 +443,11 @@ class Syntax:
         lexeme_id = sc.next_lexeme()
         if lexeme_id != lId.TId:
             raise SyntaxExceptionIdentifier(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+
+        # semantic
+        self.semantic_tree.add_neighbor(self.semantic_tree.variable_object, sc.lexeme, 0)
+        # semantic
+
         old_pointer = sc.get_pointer()
         lexeme_assign = sc.next_lexeme()
         if lexeme_assign == lId.TAssign:
@@ -406,11 +545,21 @@ class Syntax:
             if lexeme_operand != lId.TId and lexeme_operand != lId.TNum10 and lexeme_operand != lId.TNum16:
                 raise SyntaxExceptionOperand(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
 
+            # semantic
+            if lexeme_operand == lId.TId and (not self.semantic_tree.is_describe_var_early(sc.lexeme)):
+                raise SemanticExceptionUndescribeVar(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+            # semantic
+
     def description_function(self):
         sc = self.scanner
         lexeme_data_type = sc.next_lexeme()
         if not self.is_data_type(lexeme_data_type):
             raise SyntaxExceptionType(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+
+        # semantic
+        self.semantic_tree.set_current_type(lexeme_data_type)
+        # semantic
+
         self.head_function()
         self.body_function()
 
@@ -419,10 +568,23 @@ class Syntax:
         lexeme_id = sc.next_lexeme()
         if lexeme_id != lId.TId:
             raise SyntaxExceptionIdentifier(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+
+        # semantic
+        self.semantic_tree.add_neighbor(self.semantic_tree.function_object, sc.lexeme, 0)
+        self.semantic_tree.current_count_parameter = 0
+        pointer = self.semantic_tree.pointer
+        self.semantic_tree.add_special_node()
+        # semantic
+
         lexeme_open_bracket = sc.next_lexeme()
         if lexeme_open_bracket != lId.TOpen:
             raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), "(", sc.lexeme)
         self.enum_param()
+
+        # semantic
+        pointer.count_parameter = self.semantic_tree.current_count_parameter
+        # semantic
+
         lexeme_close_bracket = sc.next_lexeme()
         if lexeme_close_bracket != lId.TClose:
             raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), ")", sc.lexeme)
@@ -448,9 +610,19 @@ class Syntax:
         lexeme = sc.next_lexeme()
         if not self.is_data_type(lexeme):
             raise SyntaxExceptionType(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+
+        # semantic
+        self.semantic_tree.set_current_type(lexeme)
+        # semantic
+
         lexeme = sc.next_lexeme()
         if lexeme != lId.TId:
             raise SyntaxExceptionIdentifier(sc.get_pointer_line(), sc.get_pointer_position(), sc.lexeme)
+
+        # semantic
+        self.semantic_tree.add_neighbor(self.semantic_tree.variable_object, sc.lexeme, 0)
+        self.semantic_tree.current_count_parameter += 1
+        # semantic
 
     def call_function(self):
         sc = self.scanner
