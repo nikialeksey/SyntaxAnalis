@@ -1,2 +1,10 @@
 int b;
-int b;
+
+int regina() {
+ return 09;
+}
+
+long main() {
+    regina();
+
+}

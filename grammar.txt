@@ -1,25 +1,96 @@
+//version grammar for http://www.bottlecaps.de/rr/ui
 main_program ::= (description_var | description_function) *
 description_var ::= 'data_type' enum_var ';'
 enum_var ::= head_var (',' head_var)*
 head_var ::= name_var ('=' expression | )
-description_function ::= 'data_type' head_function body_function
 
+description_function ::= 'data_type' head_function body_function
 head_function ::= name_var '(' enum_var_func ')'
 enum_var_func ::= param (',' param)*
 param ::= 'data_type' name_var
 
 call_function ::= name_var '(' enum_operand ')'
-enum_operand ::= operand (',' operand)*
-operand ::= name_var | num10 | num16
+enum_operand ::= expression (',' expression)* | e
 
-body_function ::= '{' enum_oparator '}'
+body_function ::= '{' enum_operator '}'
 enum_operator ::= (operator | description_var)*
 operator ::= body_function | expression ';' | 'do' operator 'while' '(' expression ')' ';' | 'return' expression ';' | ';'
 
-expression ::= A2 (('=' | '+=' | '-=' | '*=' | '/=' | '%=') A2)*
+expression ::= (A2 ('=' | '+=' | '-=' | '*=' | '/=' | '%='))* A2
 A2 ::= A3 (('==' | '!=') A3)*
 A3 ::= A4 (('>' | '<' | '<=' | '>=') A4)*
 A4 ::= A5 (('+' | '-') A5)*
 A5 ::= A6 (('*' | '\' | '%') A6)*
 A6 ::= ('-' | '+' | '--' | '++') A7| A7 ('--'|'++'|)
 A7 ::= '(' expression ')' | operand | call_function
+
+
+//version for lab 9
+main_program ::= main_program description | e
+description ::= description_var | description_function
+description_var ::= 'data_type' enum_var ';'
+enum_var ::= enum_var ',' head_var | head_var
+head_var ::= name_var | name_var '=' expression
+
+description_function ::= 'data_type' head_function body_function
+head_function ::= name_var '(' enum_var_func ')'
+enum_var_func ::= enum_var_func ',' param | param
+param ::= 'data_type' name_var
+
+call_function ::= name_var '(' EO ')'
+EO ::= enum_operand | e
+enum_operand ::= enum_operand ',' expression | enum_operand
+
+body_function ::= '{' enum_operator '}'
+enum_operator ::= enum_operator operator | enum_operator description_var | e
+operator ::= body_function | expression ';' | 'do' operator 'while' '(' expression ')' ';' | 'return' expression ';' | ';'
+
+expression ::= A2 '=' A1 | A2 '+=' A1 | A2 '-=' A1 | A2 '*=' A1 | A2 '/=' A1 | A2 '%=' A1 | A2
+A2 ::= A2 '==' A3 | A2 '!=' A3 | A3
+A3 ::= A3 '>' A4 | A3 '<' A4 | A3 '<=' A4 | A3 '>=' A4 | A4
+A4 ::= A4 '+' A5 | A4 '-' A5 | A5
+A5 ::= A5 '*' A6 | A5 '\' A6 | A5 '%' A6 | A6
+A6 ::= '-' A7 | '+' A7 | '--' A7 | '++' A7 | A7 '--' | A7'++'
+A7 ::= '(' expression ')' | operand | call_function
+
+//version for lab 9
+main_program ::= 'data_type' name_var description main_program | e
+description ::= head_var EV ';' | '(' param EVF ')' body_function
+EV ::= ',' head_var EV | e
+head_var ::= '=' expression | e
+
+EVF ::= ',' param EVF | e
+param ::= 'data_type' name_var
+
+body_function ::= '{' enum_operator '}'
+enum_operator ::= O enum_operator | e
+O ::= operator | 'data_type' enum_var ';'
+operator ::= '{' enum_operator '}' | expression ';' | 'do' operator 'while' '(' expression ')' ';' | 'return' expression ';' | ';'
+
+expression ::= A2 eq2
+eq2 ::= eq1 expression | e
+eq1 ::= '=' | '+=' | '-=' | '*=' | '/=' | '%='
+
+A2 ::= A3 A31
+A31 ::= A311 A3 A31 | e
+A311 ::= '==' | '!='
+
+A3 ::= A4 A41
+A41 ::= A411 A4 A41 | e
+A411 ::= '>' | '<' | '<=' | '>='
+
+A4 ::= A5 A51
+A51 ::= A511 A5 A51 | e
+A511 ::= '+' | '-'
+
+A5 ::= A6 A61
+A61 ::= A611 A6 A61 | e
+A611 ::= '*' | '\' | '%'
+
+A6 ::= ('-' | '+' | '--' | '++') A7| A7 ('--'|'++'|)
+A7 ::= '(' expression ')' | num10 | num16 | A71
+A71 ::= name_var A711
+A711 ::= '(' EO ')' | e
+
+EO ::= expression enum_operand | e
+enum_operand ::= ',' expression enum_operand | e
