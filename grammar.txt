@@ -56,7 +56,7 @@ A7 ::= '(' expression ')' | operand | call_function
 //version for lab 9
 main_program ::= 'data_type' name_var description main_program | e
 description ::= head_var EV ';' | '(' param EVF ')' body_function
-EV ::= ',' head_var EV | e
+EV ::= ',' name_var head_var EV | e
 head_var ::= '=' expression | e
 
 EVF ::= ',' param EVF | e
