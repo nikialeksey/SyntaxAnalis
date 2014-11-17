@@ -87,10 +87,12 @@ A5 ::= A6 A61
 A61 ::= A611 A6 A61 | e
 A611 ::= '*' | '\' | '%'
 
-A6 ::= ('-' | '+' | '--' | '++') A7| A7 ('--'|'++'|)
-A7 ::= '(' expression ')' | num10 | num16 | A71
-A71 ::= name_var A711
-A711 ::= '(' EO ')' | e
+A6 ::= A71 A7 | A7 A711
+A71 ::= '-' | '+' | '--' | '++'
+A711 ::= '--' | '++' | e
+A7 ::= '(' expression ')' | num10 | num16 | A710
+A710 ::= name_var A711
+A7110 ::= '(' EO ')' | e
 
 EO ::= expression enum_operand | e
 enum_operand ::= ',' expression enum_operand | e
