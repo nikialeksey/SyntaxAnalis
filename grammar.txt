@@ -55,15 +55,14 @@ A7 ::= '(' expression ')' | operand | call_function
 
 //version for lab 9
 main_program ::= 'data_type' 'name_var' description main_program | e
-description ::= head_var EV ';' | '(' param EVF ')' body_function
-EV ::= ',' 'name_var' head_var EV | e
-head_var ::= '=' expression | e
+description ::= '=' expression EV ';' | EV ';' | '(' param EVF ')' body_function | '(' param ')' body_function | '(' ')' body_function
+EV ::= ',' 'name_var' EV | ',' 'name_var' '=' expression EV
 
-EVF ::= ',' param EVF | e
+EVF ::= ',' param EVF | ',' param
 param ::= 'data_type' 'name_var'
 
-body_function ::= '{' enum_operator '}'
-enum_operator ::= O enum_operator | e
+body_function ::= '{' enum_operator '}' | '{' '}'
+enum_operator ::= O enum_operator | O
 O ::= operator | 'data_type' 'name_var' head_var EV ';'
 operator ::= '{' enum_operator '}' | expression ';' | 'do' operator 'while' '(' expression ')' ';' | 'return' expression ';' | ';'
 
@@ -85,7 +84,7 @@ A511 ::= '+' | '-'
 
 A5 ::= A6 A61
 A61 ::= A611 A6 A61 | e
-A611 ::= '*' | '\' | '%'
+A611 ::= '*' | '/' | '%'
 
 A6 ::= A71 A7 | A7 A711
 A71 ::= '-' | '+' | '--' | '++'

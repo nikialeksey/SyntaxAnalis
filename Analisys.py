@@ -1196,9 +1196,6 @@ class LL1:
 
     @staticmethod
     def is_data_type(lexeme_id):
-        """
-        Проверяет тип лексемы c типами данных
-        """
         return lexeme_id == lId.TInt or lexeme_id == lId.TShort or lexeme_id == lId.TLong
 
 
@@ -1206,7 +1203,185 @@ class AscendingAnalise:
 
     def __init(self, scanner):
         self.scanner = scanner
+        self.stack = []
+
+    def run(self):
+        st = self.stack
+        sc = self.scanner
+        lexeme = sc.next_lexeme()
+        while not (len(st) == 3 and st[0] == lId.TEndFile and st[1] == 'main_program' and st[2] == lId.TEndFile):
+            sign = self.get_sign(st[len(st) - 1], lexeme)
+            if sign <= 0:
+                st.append(lexeme)
+                lexeme = sc.next_lexeme()
+            else:
+                rule = []
+                while self.get_sign(st[len(st) - 2], st[len(st) - 1]) != -1:
+                    rule.append(st.pop())
+                rule.append(st.pop())
+                rule = rule.reverse()
+                st.append(self.get_rule(rule))
+
+    def get_rule(self, rule):
+        if len(rule) == 4 and (rule[0] == 3 or rule[0] == 4 or rule[0] == 5) and rule[1] == 0 and rule[2] == "description" and rule[3] == "main_program":
+            return "main_program"
+        if len(rule) == 4 and rule[0] == 27 and rule[1] == "expression" and rule[2] == "EV" and rule[3] == 34:
+            return "description"
+        if len(rule) == 2 and rule[0] == "EV" and rule[1] == 34:
+            return "description"
+        if len(rule) == 5 and rule[0] == 10 and rule[1] == "param" and rule[2] == "EVF" and rule[3] == 11 and rule[4] == "body_function":
+            return "description"
+        if len(rule) == 4 and rule[0] == 10 and rule[1] == "param" and rule[2] == 11 and rule[3] == "body_function":
+            return "description"
+        if len(rule) == 3 and rule[0] == 10 and rule[1] == 11 and rule[2] == "body_function":
+            return "description"
+        if len(rule) == 3 and rule[0] == 33 and rule[1] == 0 and rule[2] == "EV":
+            return "EV"
+        if len(rule) == 5 and rule[0] == 33 and rule[1] == 0 and rule[2] == 27 and rule[3] == "expression" and rule[4] == "EV":
+            return "EV"
+        if len(rule) == 3 and rule[0] == 33 and rule[1] == "param" and rule[2] == "EVF":
+            return "EVF"
+        if len(rule) == 2 and rule[0] == 33 and rule[1] == "param":
+            return "EVF"
+        if len(rule) == 2 and (rule[0] == 3 or rule[0] == 4 or rule[0] == 5) and rule[1] == 0:
+            return "param"
+        if len(rule) == 3 and rule[0] == 12 and rule[1] == "enum_operator" and rule[2] == 13:
+            return "body_function"
+        if len(rule) == 2 and rule[0] == 12 and rule[1] == 13:
+            return "body_function"
+        if len(rule) == 2 and rule[0] == "O" and rule[1] == "enum_operator":
+            return "enum_operator"
+        if len(rule) == 1 and rule[0] == "O":
+            return "enum_operator"
+        if len(rule) == 1 and rule[0] == "operator":
+            return "O"
+        if len(rule) == 5 and (rule[0] == 3 or rule[0] == 4 or rule[0] == 5) and rule[1] == 0 and rule[2] == "head_var" and rule[3] == "EV" and rule[4] == 34:
+            return "O"
+        if len(rule) == 3 and rule[0] == 12 and rule[1] == "enum_operator" and rule[2] == 13:
+            return "operator"
+        if len(rule) == 2 and rule[0] == "expression" and rule[1] == 34:
+            return "operator"
+        if len(rule) == 7 and rule[0] == 6 and rule[1] == "operator" and rule[2] == 7 and rule[3] == 10 and rule[4] == "expression" and rule[5] == 11 and rule[6] == 34:
+            return "operator"
+        if len(rule) == 3 and rule[0] == 9 and rule[1] == "expression" and rule[2] == 34:
+            return "operator"
+        if len(rule) == 1 and rule[0] == 34:
+            return "operator"
+        if len(rule) == 2 and rule[0] == "A2" and rule[1] == "eq2":
+            return "expression"
+        if len(rule) == 2 and rule[0] == "eq1" and rule[1] == "expression":
+            return "eq2"
+        if len(rule) == 1 and rule[0] == 27:
+            return "eq1"
+        if len(rule) == 1 and rule[0] == 28:
+            return "eq1"
+        if len(rule) == 1 and rule[0] == 29:
+            return "eq1"
+        if len(rule) == 1 and rule[0] == 32:
+            return "eq1"
+        if len(rule) == 1 and rule[0] == 30:
+            return "eq1"
+        if len(rule) == 1 and rule[0] == 21:
+            return "eq1"
+        if len(rule) == 2 and rule[0] == "A3" and rule[1] == "A31":
+            return "A2"
+        if len(rule) == 3 and rule[0] == "A311" and rule[1] == "A3" and rule[2] == "A31":
+            return "A31"
+        if len(rule) == 1 and rule[0] == 25:
+            return "A311"
+        if len(rule) == 1 and rule[0] == 26:
+            return "A311"
+        if len(rule) == 2 and rule[0] == "A4" and rule[1] == "A41":
+            return "A3"
+        if len(rule) == 3 and rule[0] == "A411" and rule[1] == "A4" and rule[2] == "A41":
+            return "A41"
+        if len(rule) == 1 and rule[0] == 21:
+            return "A411"
+        if len(rule) == 1 and rule[0] == 22:
+            return "A411"
+        if len(rule) == 1 and rule[0] == 24:
+            return "A411"
+        if len(rule) == 1 and rule[0] == 23:
+            return "A411"
+        if len(rule) == 2 and rule[0] == "A5" and rule[1] == "A51":
+            return "A4"
+        if len(rule) == 3 and rule[0] == "A511" and rule[1] == "A5" and rule[2] == "A51":
+            return "A51"
+        if len(rule) == 1 and rule[0] == 14:
+            return "A511"
+        if len(rule) == 1 and rule[0] == 15:
+            return "A511"
+        if len(rule) == 2 and rule[0] == "A6" and rule[1] == "A61":
+            return "A5"
+        if len(rule) == 3 and rule[0] == "A611" and rule[1] == "A6" and rule[2] == "A61":
+            return "A61"
+        if len(rule) == 1 and rule[0] == 20:
+            return "A611"
+        if len(rule) == 1 and rule[0] == 18:
+            return "A611"
+        if len(rule) == 1 and rule[0] == 19:
+            return "A611"
+        if len(rule) == 2 and rule[0] == "A71" and rule[1] == "A7":
+            return "A6"
+        if len(rule) == 2 and rule[0] == "A7" and rule[1] == "A711":
+            return "A6"
+        if len(rule) == 1 and rule[0] == 15:
+            return "A71"
+        if len(rule) == 1 and rule[0] == 14:
+            return "A71"
+        if len(rule) == 1 and rule[0] == 17:
+            return "A71"
+        if len(rule) == 1 and rule[0] == 16:
+            return "A71"
+        if len(rule) == 1 and rule[0] == 17:
+            return "A711"
+        if len(rule) == 1 and rule[0] == 16:
+            return "A711"
+        if len(rule) == 3 and rule[0] == 10 and rule[1] == "expression" and rule[2] == 11:
+            return "A7"
+        if len(rule) == 1 and rule[0] == "num10":
+            return "A7"
+        if len(rule) == 1 and rule[0] == "num16":
+            return "A7"
+        if len(rule) == 1 and rule[0] == "A710":
+            return "A7"
+        if len(rule) == 2 and rule[0] == 0 and rule[1] == "A711":
+            return "A710"
+        if len(rule) == 3 and rule[0] == 10 and rule[1] == "EO" and rule[2] == 11:
+            return "A7110"
+        if len(rule) == 2 and rule[0] == "expression" and rule[1] == "enum_operand":
+            return "EO"
+        if len(rule) == 3 and rule[0] == 33 and rule[1] == "expression" and rule[2] == "enum_operand":
+            return "enum_operand"
+        raise Exception("what's wrong?")
+
+    def get_sign(self, lexeme1, lexeme2):
+        """
+           return -1: lexeme1 < lexeme2
+           return  0: lexeme1 = lexeme2
+           return  1: lexeme1 > lexeme2
+        """
+        if self.is_data_type(lexeme1) and lexeme2 == lId.TId:
+            return 0
+        if lexeme1 == lId.TId and lexeme2 == "description":
+            return 0
+        if lexeme1 == "head_var" and lexeme2 == "EV":
+            return 0;
+        if lexeme1 == "EV" and lexeme2 == lId.TSemicolon:
+            return 0
+        if lexeme1 == lId.TComma and lexeme2 == lId.TId:
+            return 0
+        if lexeme1 == lId.TId and lexeme2 == "head_var":
+            return 0
 
 
-if __name__ == "__main__":
-    print(help(Syntax.main_program))
+        if lexeme1 == lId.TId and lexeme2 == lId.TOpen:
+            return -1
+        if lexeme1 == lId.TId and lexeme2 == "head_var":
+            return -1
+
+        return 0
+
+    @staticmethod
+    def is_data_type(lexeme_id):
+        return lexeme_id == lId.TInt or lexeme_id == lId.TShort or lexeme_id == lId.TLong
