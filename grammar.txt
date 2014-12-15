@@ -54,17 +54,17 @@ A6 ::= '-' A7 | '+' A7 | '--' A7 | '++' A7 | A7 '--' | A7'++'
 A7 ::= '(' expression ')' | operand | call_function
 
 //version for lab 9
-main_program ::= 'data_type' name_var description main_program | e
+main_program ::= 'data_type' 'name_var' description main_program | e
 description ::= head_var EV ';' | '(' param EVF ')' body_function
-EV ::= ',' name_var head_var EV | e
+EV ::= ',' 'name_var' head_var EV | e
 head_var ::= '=' expression | e
 
 EVF ::= ',' param EVF | e
-param ::= 'data_type' name_var
+param ::= 'data_type' 'name_var'
 
 body_function ::= '{' enum_operator '}'
 enum_operator ::= O enum_operator | e
-O ::= operator | 'data_type' enum_var ';'
+O ::= operator | 'data_type' 'name_var' head_var EV ';'
 operator ::= '{' enum_operator '}' | expression ';' | 'do' operator 'while' '(' expression ')' ';' | 'return' expression ';' | ';'
 
 expression ::= A2 eq2
@@ -91,7 +91,7 @@ A6 ::= A71 A7 | A7 A711
 A71 ::= '-' | '+' | '--' | '++'
 A711 ::= '--' | '++' | e
 A7 ::= '(' expression ')' | num10 | num16 | A710
-A710 ::= name_var A711
+A710 ::= 'name_var' A711
 A7110 ::= '(' EO ')' | e
 
 EO ::= expression enum_operand | e

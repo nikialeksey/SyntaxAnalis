@@ -1109,7 +1109,6 @@ class LL1:
             raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),\
                                "ожидалась знаковая операция (+, -), найдено " + str(self.scanner.lexeme))
 
-
     def A5(self, lexeme):
         self.stack.append('A61')
         self.stack.append('A6')
@@ -1131,7 +1130,6 @@ class LL1:
             raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),\
                                "ожидалась операция умножения или деления (/, *, %), найдено " + str(self.scanner.lexeme))
 
-
     def A6(self, lexeme):
         if lexeme == lId.TPlus or lexeme == lId.TPlusPlus or lexeme == lId.TMinus or lexeme == lId.TMinusMinus:
             self.stack.append('A7')
@@ -1152,7 +1150,6 @@ class LL1:
         else:
             raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),\
                                "ожидалась операция инкремента или знаковая (++, --, +, -), найдено " + str(self.scanner.lexeme))
-
 
     def A711(self, lexeme):
         if lexeme == lId.TPlusPlus:
@@ -1203,6 +1200,12 @@ class LL1:
         Проверяет тип лексемы c типами данных
         """
         return lexeme_id == lId.TInt or lexeme_id == lId.TShort or lexeme_id == lId.TLong
+
+
+class AscendingAnalise:
+
+    def __init(self, scanner):
+        self.scanner = scanner
 
 
 if __name__ == "__main__":
