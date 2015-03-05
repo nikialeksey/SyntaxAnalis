@@ -1,7 +1,5 @@
-from Analisys import Scanner
-from Analisys import Syntax
-from Analisys import LL1
-from Analisys import AscendingAnalise
+from Scanner import Scanner
+from DescendingAnalyse import Syntax
 
 fprog = open("input.txt", "r")
 program = ""
@@ -11,9 +9,7 @@ program += "\0"
 fprog.close()
 
 scanner = Scanner(program)
-# syntax = Syntax(scanner)
-# syntax = LL1(scanner)
-syntax = AscendingAnalise(scanner)
+syntax = Syntax(scanner)
 
 try:
     syntax.run()
