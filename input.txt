@@ -1,7 +1,14 @@
 int a = a + a + b - 178 * (--a);
+int a = 1;
+
+int main(int a, int b3) {
+
+}
 
 int main() {
     do {
         f(a { , b { );
+        int a = a;
+        a + b;
     } while (1);
 }
