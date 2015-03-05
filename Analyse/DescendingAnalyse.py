@@ -1,7 +1,7 @@
 from Syntax import LexemId as lId
 from Exceptions.SyntaxException import *
 from Exceptions.SemanticException import *
-from Semantic import SemanticTree
+from Semantic.SemanticTree import SemanticTree
 
 
 class Syntax:

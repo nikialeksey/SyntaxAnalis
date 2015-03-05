@@ -1,4 +1,4 @@
-from Syntax import Scanner
+from Syntax.Scanner import Scanner
 from Analyse.DescendingAnalyse import Syntax
 
 fprog = open("input.txt", "r")
@@ -12,7 +12,7 @@ scanner = Scanner(program)
 syntax = Syntax(scanner)
 
 try:
-    syntax.run()
+    syntax.main_program()
 except Exception as e:
     print(e)
 else:
