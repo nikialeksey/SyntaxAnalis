@@ -1,5 +1,5 @@
-from Scanner import Scanner
-from DescendingAnalyse import Syntax
+from Syntax import Scanner
+from Analyse.DescendingAnalyse import Syntax
 
 fprog = open("input.txt", "r")
 program = ""

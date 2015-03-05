@@ -1,4 +1,4 @@
-import LexemId as lId
+from Syntax import LexemId as lId
 
 
 class Scanner:

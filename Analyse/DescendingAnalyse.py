@@ -1,7 +1,7 @@
-import LexemId as lId
-from SyntaxException import *
-from SemanticException import *
-from SemanticTree import SemanticTree
+from Syntax import LexemId as lId
+from Exceptions.SyntaxException import *
+from Exceptions.SemanticException import *
+from Semantic import SemanticTree
 
 
 class Syntax:

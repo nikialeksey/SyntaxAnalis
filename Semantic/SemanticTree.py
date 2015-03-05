@@ -1,5 +1,5 @@
-import LexemId as lId
-from SemanticException import *
+from Syntax import LexemId as lId
+from Exceptions.SemanticException import *
 
 class Node:
     def __init__(self, type_object, type_data, lexeme, count_parameter):
