@@ -1,12 +1,12 @@
 from Syntax.Scanner import Scanner
 from Analyse.DescendingAnalyse import Syntax
 
-fprog = open("input.txt", "r")
+program_file = open("input.txt", "r")
 program = ""
-for line in fprog:
+for line in program_file:
     program += line
 program += "\0"
-fprog.close()
+program_file.close()
 
 scanner = Scanner(program)
 syntax = Syntax(scanner)
