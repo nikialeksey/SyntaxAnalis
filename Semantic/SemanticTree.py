@@ -1,12 +1,18 @@
 from Syntax import LexemId as lId
 from Exceptions.SemanticException import *
 
+
 class Node:
     def __init__(self, type_object, type_data, lexeme, count_parameter):
-        self.type_object = type_object
-        self.type_data = type_data
-        self.lexeme = lexeme
-        self.count_parameter = count_parameter
+        self.type_object = type_object  # Тип объекта (функция или переменная)
+        self.type_data = type_data  # Тип данных (short, int, long)
+        self.lexeme = lexeme  # Представление переменной или функции (имя)
+        self.count_parameter = count_parameter  # Количество параметров функции
+        self.value = None  # Значение переменной или возвращаемое значение функции
+
+        self.__left = None
+        self.__right = None
+        self.__parent = None
 
     def set_left_node(self, node):
         self.__left = node
