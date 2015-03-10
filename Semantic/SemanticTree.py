@@ -1,14 +1,24 @@
 from Syntax import LexemId as lId
 from Exceptions.SemanticException import *
+from collections import deque
 
 
 class Node:
+    VARIABLE = 0
+    FUNCTION = 1
+    SPECIAL = 2
+
+    __id = 0  # уникальный идентификатор
+
     def __init__(self, type_object, type_data, lexeme, count_parameter):
-        self.type_object = type_object  # Тип объекта (функция или переменная)
+        self.type_object = type_object  # Тип объекта (функция или переменная или специальный объект)
         self.type_data = type_data  # Тип данных (short, int, long)
         self.lexeme = lexeme  # Представление переменной или функции (имя)
         self.count_parameter = count_parameter  # Количество параметров функции
         self.value = None  # Значение переменной или возвращаемое значение функции
+
+        self.id = Node.__id
+        Node.__id += 1
 
         self.__left = None
         self.__right = None
@@ -32,12 +42,22 @@ class Node:
     def get_parent(self):
         return self.__parent
 
+    def is_special_node(self):
+        return self.type_object == Node.SPECIAL
+
+    def is_variable_node(self):
+        return self.type_object == Node.VARIABLE
+
+    def is_function_node(self):
+        return self.type_object == Node.FUNCTION
+
 
 class SemanticTree:
     def __init__(self):
-        self.variable_object = 0
-        self.function_object = 1
-        self.special_object = 2
+        self.variable_object = Node.VARIABLE
+        self.function_object = Node.FUNCTION
+        self.special_object = Node.SPECIAL
+
         self.dummy = Node(-1, -1, -1, -1)
         root = Node(self.special_object, -1, -1, -1)
 
@@ -48,6 +68,12 @@ class SemanticTree:
         self.pointer = root
         self.__current_type = lId.TInt
         self.current_count_parameter = 0
+
+    def get_root(self):
+        return self.__root
+
+    def get_dummy(self):
+        return self.dummy
 
     def get_current_type(self):
         return self.__current_type
@@ -126,3 +152,61 @@ class SemanticTree:
         self.add_special_node()
         self.add_neighbor(type_object, lexeme, count_parameter)
 
+    def write(self, file_name):
+        f = open(file_name, mode='w')
+        f.write("digraph semantic {\n")
+
+        # set custom
+        f.write('ratio=fill; node [margin=0, color="#aaaa33", style="filled", shape=box, fontsize=8];'
+                '\ngraph [ordering="out"];\n')
+
+        # add edges
+        def next_dummy_name():
+            next_dummy_name.cnt_dummy += 1
+            return "dummy" + str(next_dummy_name.cnt_dummy)
+        next_dummy_name.cnt_dummy = 0
+
+        def write_dummy(parent_id):
+            dummy_name = next_dummy_name()
+            f.write(dummy_name + " [shape=point];\n")
+            f.write(str(parent_id) + " -> " + dummy_name + ";\n")
+
+        def function_label(node):
+            s = "<b>fun:</b> " + node.lexeme + "<br align='left'/><b>type:</b> " + str(lId.lexemIdToStr[node.type_data])
+            s = s + "<br align='left'/><b>parameters:</b> " + str(node.count_parameter)
+            s = s + "<br align='left'/><b align='left'>value:</b> " + str(node.value)
+            return s
+
+        def variable_label(node):
+            s = "<b>var:</b> " + node.lexeme + "<br align='left'/><b>type</b>: " + str(lId.lexemIdToStr[node.type_data])
+            s = s + "<br align='left'/><b>value:</b> " + str(node.value)
+            return s
+
+        root = self.get_root()
+        dummy = self.get_dummy()
+        queue = deque()
+        queue.append(root)
+        while len(queue) > 0:
+            node = queue.popleft()
+
+            if node.is_special_node():
+                f.write(str(node.id) + ' [label=< >, fillcolor="#ff0000", shape=circle, width=0.1];\n')
+            else:
+                label = function_label(node) if node.is_function_node() else variable_label(node)
+                f.write(str(node.id) + ' [label=<' + label + '>];\n')
+
+            if node.get_left() != dummy:
+                left = node.get_left()
+                f.write(str(node.id) + " -> " + str(left.id) + ";\n")
+                queue.append(left)
+            else:
+                write_dummy(node.id)
+
+            if node.get_right() != dummy:
+                right = node.get_right()
+                f.write(str(node.id) + " -> " + str(right.id) + ";\n")
+                queue.append(right)
+            else:
+                write_dummy(node.id)
+
+        f.write("}")

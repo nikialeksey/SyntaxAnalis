@@ -1,7 +1,10 @@
 int a = 1+2;
 
-int fun() {
-
+int main2(int a, int k, int l) {
+    int b = 15;
 }
 
-long long();
+int main(int bb, int kk, int ll) {
+    int a = 0;
+    {int b = 14;}
+}
