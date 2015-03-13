@@ -1,5 +1,5 @@
 from Syntax.Scanner import Scanner
-from Analyse.DescendingAnalyse import Syntax
+from Analyse.DescendingAnalyse import DescendingAnalyse
 from subprocess import call
 
 program_file = open("input.txt", "r")
@@ -10,7 +10,7 @@ program += "\0"
 program_file.close()
 
 scanner = Scanner(program)
-syntax = Syntax(scanner)
+syntax = DescendingAnalyse(scanner)
 
 try:
     syntax.main_program()

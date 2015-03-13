@@ -1,6 +1,8 @@
 from Syntax import LexemId as lId
 from Exceptions.SemanticException import *
 from collections import deque
+from Interpreter import Interpreter
+from Semantic.ValueObj import ValueObj
 
 
 class Node:
@@ -15,7 +17,7 @@ class Node:
         self.type_data = type_data  # Тип данных (short, int, long)
         self.lexeme = lexeme  # Представление переменной или функции (имя)
         self.count_parameter = count_parameter  # Количество параметров функции
-        self.value = None  # Значение переменной или возвращаемое значение функции
+        self.value = 0  # Значение переменной или возвращаемое значение функции
 
         self.id = Node.__id
         Node.__id += 1
@@ -81,6 +83,10 @@ class SemanticTree:
     def set_current_type(self, current_type):
         self.__current_type = current_type
 
+    def set_value_obj(self, value_obj):
+        Interpreter.to_type(value_obj, self.pointer.type_data)
+        self.pointer.value = value_obj.value
+
     def go_left(self):
         if self.pointer.get_left() != self.dummy:
             self.pointer = self.pointer.get_left()
@@ -100,6 +106,20 @@ class SemanticTree:
         if p.type_object == self.special_object:
             p = p.get_parent()
             self.pointer = p
+
+    def get_variable_value_obj(self, lexeme):
+        p = self.pointer
+        while p != self.__root:
+            if p.lexeme == lexeme:
+                return ValueObj(value=p.value, type=p.type_data)
+            p = p.get_parent()
+
+    def get_variable_node(self, lexeme):
+        p = self.pointer
+        while p != self.__root:
+            if p.lexeme == lexeme:
+                return p
+            p = p.get_parent()
 
     def is_describe_var_early(self, lexeme_line, lexeme_position, lexeme):
         p = self.pointer

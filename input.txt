@@ -1,10 +1,5 @@
-int a = 1+2;
+int b = 2;
 
-int main2(int a, int k, int l) {
-    int b = 15;
-}
-
-int main(int bb, int kk, int ll) {
-    int a = 0;
-    {int b = 14;}
+int main() {
+    int a;
 }
