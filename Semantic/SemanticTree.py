@@ -12,11 +12,12 @@ class Node:
 
     __id = 0  # уникальный идентификатор
 
-    def __init__(self, type_object, type_data, lexeme, count_parameter):
+    def __init__(self, type_object, type_data, lexeme, count_parameter, entry_point=None):
         self.type_object = type_object  # Тип объекта (функция или переменная или специальный объект)
         self.type_data = type_data  # Тип данных (short, int, long)
         self.lexeme = lexeme  # Представление переменной или функции (имя)
         self.count_parameter = count_parameter  # Количество параметров функции
+        self.entry_point = entry_point  # Точка входа (только для функций), позиция в тексте тела функции
         self.value = 0  # Значение переменной или возвращаемое значение функции
 
         self.id = Node.__id
@@ -79,6 +80,13 @@ class SemanticTree:
 
     def get_current_type(self):
         return self.__current_type
+
+    def get_node_of_parent_function(self):
+        pointer = self.pointer
+        while pointer != self.__root:
+            if pointer.is_function_node():
+                return pointer
+            pointer = pointer.get_parent()
 
     def set_current_type(self, current_type):
         self.__current_type = current_type
@@ -177,7 +185,7 @@ class SemanticTree:
         f.write("digraph semantic {\n")
 
         # set custom
-        f.write('ratio=fill; node [margin=0, color="#aaaa33", style="filled", shape=box, fontsize=8];'
+        f.write('ratio=fill; node [margin=0, style=filled, shape=box, fontsize=8];'
                 '\ngraph [ordering="out"];\n')
 
         # add edges
@@ -213,7 +221,8 @@ class SemanticTree:
                 f.write(str(node.id) + ' [label=< >, fillcolor="#ff0000", shape=circle, width=0.1];\n')
             else:
                 label = function_label(node) if node.is_function_node() else variable_label(node)
-                f.write(str(node.id) + ' [label=<' + label + '>];\n')
+                fill_color = '"#99f090"' if node.is_function_node() else '"#0099f0"'
+                f.write(str(node.id) + ' [label=<' + label + '>, fillcolor=' + fill_color + '];\n')
 
             if node.get_left() != dummy:
                 left = node.get_left()

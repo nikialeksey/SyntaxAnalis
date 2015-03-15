@@ -253,7 +253,12 @@ class DescendingAnalyse:
         # semantic
 
         self.head_function()
-        self.body_function()
+
+        # Interpreter
+        node_fun = self.semantic_tree.get_node_of_parent_function()
+        if node_fun.lexeme == 'main':  # Выполнять только главную функцию
+            self.body_function()
+        # Interpreter
 
         # semantic
         self.semantic_tree.go_out()
@@ -286,6 +291,10 @@ class DescendingAnalyse:
         lexeme_close_bracket = sc.next_lexeme()
         if lexeme_close_bracket != lId.TClose:
             raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), ")", sc.lexeme)
+
+        # Interpreter
+        pointer.entry_point = sc.get_pointer()  # Запомним точку входа для функции
+        # Interpreter
 
     def enum_param(self):
         sc = self.scanner
