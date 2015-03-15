@@ -1,4 +1,4 @@
-int b = 2;
+int bc = 25;
 
 int main() {
     int a;
