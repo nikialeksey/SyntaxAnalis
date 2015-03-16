@@ -129,6 +129,49 @@ class SemanticTree:
                 return p
             p = p.get_parent()
 
+    def get_function_node(self, lexeme):
+        p = self.pointer
+        while p != self.__root:
+            if p.lexeme == lexeme:
+                return p
+            p = p.get_parent()
+
+    def insert_empty_node_above(self, node):
+        n = Node(-1, -1, -1, -1)
+        p = node.get_parent()
+
+        n.set_left_node(node)
+        n.set_right_node(self.dummy)
+        n.set_parent_node(p)
+
+        node.set_parent_node(n)
+
+        p.set_left_node(n)
+
+    def copy_node(self, to_node, from_node):
+        to_node.type_object = from_node.type_object
+        to_node.type_data = from_node.type_data
+        to_node.lexeme = from_node.lexeme
+        to_node.count_parameter = from_node.count_parameter
+        to_node.entry_point = from_node.entry_point
+        to_node.value = from_node.value
+
+    def copy_function(self, to_node, from_node):
+        self.copy_node(to_node, from_node)
+
+        self.add_special_to_node(to_node)
+        to_node = to_node.get_right()
+        from_node = from_node.get_right()
+
+        while True:
+            from_node = from_node.get_left()
+            if from_node == self.dummy:
+                break
+            self.add_neighbor_to_node(to_node, from_node.type_object, from_node.lexeme, 0)
+            to_node = to_node.get_left()
+            to_node.type_data = from_node.type_data
+
+
     def is_describe_var_early(self, lexeme_line, lexeme_position, lexeme):
         p = self.pointer
         while p != self.__root:
@@ -160,24 +203,40 @@ class SemanticTree:
             p = p.get_parent()
         return False
 
-    def add_neighbor(self, type_object, lexeme, count_parameter):
+    def get_neighbor_node(self, type_object, lexeme, count_parameter):
         neighbor = Node(type_object, self.__current_type, lexeme, count_parameter)
         neighbor.set_left_node(self.dummy)
         neighbor.set_right_node(self.dummy)
-        neighbor.set_parent_node(self.pointer)
-        self.pointer.set_left_node(neighbor)
+        return neighbor
+
+    def add_neighbor_to_node(self, node, type_object, lexeme, count_parameter):
+        neighbor = self.get_neighbor_node(type_object, lexeme, count_parameter)
+
+        neighbor.set_parent_node(node)
+        node.set_left_node(neighbor)
+
+    def add_neighbor(self, type_object, lexeme, count_parameter):
+        self.add_neighbor_to_node(self.pointer, type_object, lexeme, count_parameter)
         self.go_left()
 
-    def add_special_node(self):
+    def get_special(self):
         special = Node(self.special_object, -1, -1, -1)
         special.set_left_node(self.dummy)
         special.set_right_node(self.dummy)
-        special.set_parent_node(self.pointer)
-        self.pointer.set_right_node(special)
+        return special
+
+    def add_special_to_node(self, node):
+        special = self.get_special()
+
+        special.set_parent_node(node)
+        node.set_right_node(special)
+
+    def add_special(self):
+        self.add_special_to_node(self.pointer)
         self.go_right()
 
     def add_child(self, type_object, lexeme, count_parameter):
-        self.add_special_node()
+        self.add_special()
         self.add_neighbor(type_object, lexeme, count_parameter)
 
     def write(self, file_name):

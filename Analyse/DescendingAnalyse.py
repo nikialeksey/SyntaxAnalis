@@ -289,7 +289,7 @@ class DescendingAnalyse:
         self.semantic_tree.add_neighbor(self.semantic_tree.function_object, sc.lexeme, 0)
         self.semantic_tree.current_count_parameter = 0
         pointer = self.semantic_tree.pointer
-        self.semantic_tree.add_special_node()
+        self.semantic_tree.add_special()
         # semantic
 
         lexeme_open_bracket = sc.next_lexeme()
@@ -360,9 +360,28 @@ class DescendingAnalyse:
             self.semantic_tree.current_count_parameter = 0
             # semantic
 
+        local_pointer = None
+        fun_node = None
+        if interpreter_flag:
+            # Interpreter
+            base_fun_node = self.semantic_tree.get_function_node(sc.lexeme)
+            self.semantic_tree.insert_empty_node_above(base_fun_node)
+            fun_node = base_fun_node.get_parent()
+            self.semantic_tree.copy_function(fun_node, base_fun_node)
+            local_pointer = fun_node.get_right()
+            # Interpreter
+
         lexeme_open_bracket = sc.next_lexeme()
         if lexeme_open_bracket != lId.TOpen:
             raise SyntaxExceptionCharacter(sc.get_pointer_line(), sc.get_pointer_position(), "(", sc.lexeme)
+
+        global_pointer = None
+        if interpreter_flag:
+            # Interpreter
+            global_pointer = self.semantic_tree.pointer
+            self.semantic_tree.pointer = local_pointer
+            # Interpreter
+
         self.enum_operand(interpreter_flag=interpreter_flag)
         lexeme_close_bracket = sc.next_lexeme()
         if lexeme_close_bracket != lId.TClose:
@@ -372,6 +391,13 @@ class DescendingAnalyse:
             # semantic
             if not self.semantic_tree.is_describe_function_early(lexeme_line, lexeme_position, lexeme, self.semantic_tree.current_count_parameter):
                 raise SemanticExceptionUndescribeFunction(lexeme_line, lexeme_position, lexeme)
+            old_scanner_pointer = sc.get_pointer()
+
+            sc.set_pointer(fun_node.entry_point)
+            self.body_function(interpreter_flag=interpreter_flag)
+
+            sc.set_pointer(old_scanner_pointer)
+            self.semantic_tree.pointer = global_pointer
             # semantic
 
     def enum_operand(self, interpreter_flag=False):
@@ -380,11 +406,16 @@ class DescendingAnalyse:
         lexeme = sc.next_lexeme()
         if lexeme != lId.TClose:
             sc.set_pointer(old_pointer)
-            self.expression(interpreter_flag=interpreter_flag)
+            value_obj = ValueObj()
+            self.expression(value_obj, interpreter_flag=interpreter_flag)
 
             if interpreter_flag:
                 # semantic
                 self.semantic_tree.current_count_parameter += 1
+                self.semantic_tree.go_left()
+                if self.semantic_tree.pointer != self.semantic_tree.dummy:
+                    Interpreter.to_type(value_obj, self.semantic_tree.pointer.type_data)
+                    self.semantic_tree.pointer.value = value_obj.value
                 # semantic
 
             old_pointer = sc.get_pointer()
@@ -407,7 +438,7 @@ class DescendingAnalyse:
 
         if interpreter_flag:
             # semantic
-            self.semantic_tree.add_special_node()
+            self.semantic_tree.add_special()
             # semantic
 
         self.enum_operator(interpreter_flag=interpreter_flag)
@@ -510,7 +541,7 @@ class DescendingAnalyse:
         sc.next_lexeme()  # =
 
         value_obj = ValueObj()
-        self.expression(value_obj)  # TO DO interpreter flag
+        self.expression(value_obj, interpreter_flag=interpreter_flag)
 
         if interpreter_flag:
             # Interpreter

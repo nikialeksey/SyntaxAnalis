@@ -1,5 +1,9 @@
-int bc = 25;
+int x = 2;
+
+short run(int param) {
+    x = param;
+}
 
 int main() {
-    int a;
+    run(1);
 }
