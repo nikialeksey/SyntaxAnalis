@@ -1,9 +1,14 @@
-int x = 2;
+int x;
 
-short run(int param) {
-    x = param;
+int run(int param) {
 }
 
 int main() {
-    run(1);
+    int n = 10;
+    x = 1;
+    int cnt = 1;
+    do {
+        x = x * 2;
+        cnt = cnt + 1;
+    } while(cnt <= n);
 }

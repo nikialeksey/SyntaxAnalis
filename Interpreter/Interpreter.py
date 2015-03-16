@@ -2,6 +2,8 @@ __author__ = 'Alexey Nikitin'
 from Syntax import LexemId as lId
 from Semantic.ValueObj import ValueObj
 
+interpreter_flag = False
+
 
 def to_type(value_obj, type):
     value_obj.type = type
