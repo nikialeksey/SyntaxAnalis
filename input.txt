@@ -1,14 +1,8 @@
-int x;
-
-int run(int param) {
-}
-
 int main() {
-    int n = 10;
-    x = 1;
-    int cnt = 1;
-    do {
-        x = x * 2;
-        cnt = cnt + 1;
-    } while(cnt <= n);
+    short ia, ib = 5;
+    long la, lb = 2000000;
+    ia = ib + lb;
+    int a = ib + lb;
+    a = lb * lb;
+    lb = lb / ib / 100 * lb;
 }

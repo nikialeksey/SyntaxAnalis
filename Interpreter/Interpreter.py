@@ -10,11 +10,20 @@ def to_type(value_obj, type):
 
     # TO DO привидение типов (нужно побитовое и)
     if type == lId.TShort:
-        ...
+        value_obj.value = value_obj.value & ((1 << 16) - 1)
+        if value_obj.value & (1 << 16):
+            value_obj.value = value_obj.value & (1 << 16)
+            value_obj.value *= -1
     elif type == lId.TInt:
-        ...
+        value_obj.value = value_obj.value & ((1 << 32) - 1)
+        if value_obj.value & (1 << 32):
+            value_obj.value = value_obj.value & (1 << 32)
+            value_obj.value *= -1
     else:
-        ...
+        value_obj.value = value_obj.value & ((1 << 64) - 1)
+        if value_obj.value & (1 << 64):
+            value_obj.value = value_obj.value & (1 << 64)
+            value_obj.value *= -1
 
 def get_value_obj_num10(lexeme_num10):
     value = int(lexeme_num10)
@@ -24,7 +33,7 @@ def get_value_obj_num10(lexeme_num10):
         return ValueObj(value=value, type=lId.TInt)
     else:
         # TO DO побитовое и с ((1 << 64) - 1)
-        return ValueObj(value=value, type=lId.TLong)
+        return ValueObj(value=value & ((1 << 64) - 1), type=lId.TLong)
 
 
 def set_value_obj_from_num10(value_obj, lexeme_num10):
@@ -41,7 +50,7 @@ def get_value_obj_num16(lexeme_num16):
         return ValueObj(value=value, type=lId.TInt)
     else:
         # TO DO побитовое и с ((1 << 64) - 1)
-        ValueObj(value=value, type=lId.TLong)
+        return ValueObj(value=value & ((1 << 64) - 1), type=lId.TLong)
 
 
 def set_value_obj_from_num16(value_obj, lexeme_num16):
