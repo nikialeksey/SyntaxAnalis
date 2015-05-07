@@ -284,27 +284,16 @@ class LL1:
             self.stack.append('A7')
             self.stack.append('A71')
         else:
-            self.stack.append('A711')
             self.stack.append('A7')
 
     def A71(self, lexeme):
         if lexeme == lId.TPlus:
             self.stack.append(lId.TPlus)
-        elif lexeme == lId.TPlusPlus:
-            self.stack.append(lId.TPlusPlus)
         elif lexeme == lId.TMinus:
             self.stack.append(lId.TMinus)
-        elif lexeme == lId.TMinusMinus:
-            self.stack.append(lId.TMinusMinus)
         else:
             raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
-                               "ожидалась операция инкремента или знаковая (++, --, +, -), найдено " + str(self.scanner.lexeme))
-
-    def A711(self, lexeme):
-        if lexeme == lId.TPlusPlus:
-            self.stack.append(lId.TPlusPlus)
-        elif lexeme == lId.TMinusMinus:
-            self.stack.append(lId.TMinusMinus)
+                               "ожидалась операция знаковая ( +, -), найдено " + str(self.scanner.lexeme))
 
     def A7(self, lexeme):
         if lexeme == lId.TOpen:
