@@ -1,4 +1,5 @@
 from Syntax import LexemId as lId
+from Semantic.SemanticTree import SemanticTree
 
 
 class LL1Exception(Exception):
@@ -13,76 +14,24 @@ class LL1Exception(Exception):
 
 class LL1:
     def __init__(self, scanner):
+        self.semantic = SemanticTree()
         self.scanner = scanner
         self.stack = []
         self.stack.append(lId.TEndFile)
         self.stack.append('main_program')
 
+        self.mydict = {
+            'main_program': self.main_program, 'description': self.description, 'EV': self.EV, 'head_var': self.head_var,
+            'EVF': self.EVF, 'PEVF': self.PEVF, 'param': self.param, 'body_function': self.body_function,
+            'enum_operator': self.enum_operator, 'O': self.O, 'operator': self.operator, 'expression': self.expression,
+            'A3': self.A3, 'A31': self.A31, 'A311': self.A311, 'A4': self.A4, 'A41': self.A41, 'A411': self.A411,
+            'A5': self.A5, 'A51': self.A51, 'A511': self.A511, 'A6': self.A6, 'A61': self.A61, 'A611': self.A611,
+            'A7': self.A7, 'A71': self.A71, 'A710': self.A710, 'A7110': self.A7110, 'EO': self.EO,
+            'enum_operand': self.enum_operand,
+        }
+
     def __getitem__(self, item):
-        if item == 'main_program':
-            return self.main_program
-        elif item == 'description':
-            return self.description
-        elif item == 'EV':
-            return self.EV
-        elif item == 'head_var':
-            return self.head_var
-        elif item == 'EVF':
-            return self.EVF
-        elif item == 'PEVF':
-            return self.PEVF
-        elif item == 'param':
-            return self.param
-        elif item == 'body_function':
-            return self.body_function
-        elif item == 'enum_operator':
-            return self.enum_operator
-        elif item == 'O':
-            return self.O
-        elif item == 'operator':
-            return self.operator
-        elif item == 'expression':
-            return self.expression
-        elif item == 'A31':
-            return self.A31
-        elif item == 'A311':
-            return self.A311
-        elif item == 'A3':
-            return self.A3
-        elif item == 'A41':
-            return self.A41
-        elif item == 'A411':
-            return self.A411
-        elif item == 'A4':
-            return self.A4
-        elif item == 'A51':
-            return self.A51
-        elif item == 'A511':
-            return self.A511
-        elif item == 'A5':
-            return self.A5
-        elif item == 'A61':
-            return self.A61
-        elif item == 'A611':
-            return self.A611
-        elif item == 'A6':
-            return self.A6
-        elif item == 'A71':
-            return self.A71
-        elif item == 'A711':
-            return self.A711
-        elif item == 'A7':
-            return self.A7
-        elif item == 'A710':
-            return self.A710
-        elif item == 'A7110':
-            return self.A7110
-        elif item == 'EO':
-            return self.EO
-        elif item == 'enum_operand':
-            return self.enum_operand
-        else:
-            print('Not found ' + str(item))
+        return self.mydict.get(item)
 
     def run(self):
         sc = self.scanner
