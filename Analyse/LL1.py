@@ -280,7 +280,7 @@ class LL1:
                                "ожидалась операция умножения или деления (/, *, %), найдено " + str(self.scanner.lexeme))
 
     def A6(self, lexeme):
-        if lexeme == lId.TPlus or lexeme == lId.TPlusPlus or lexeme == lId.TMinus or lexeme == lId.TMinusMinus:
+        if lexeme == lId.TPlus or lexeme == lId.TMinus:
             self.stack.append('A7')
             self.stack.append('A71')
         else:
