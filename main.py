@@ -1,6 +1,6 @@
 from Syntax.Scanner import Scanner
 from Analyse.LL1 import LL1
-# from subprocess import call
+from subprocess import call
 
 program_file = open("input.txt", "r")
 program = ""

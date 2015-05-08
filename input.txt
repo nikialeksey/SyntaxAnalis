@@ -1,8 +1,5 @@
-long main() {
-    short ia, ib = 5;
-    long la, lb = 2000000;
-    ia = ib + lb;
-    short a = ib + lb;
-    a = lb * lb;
-    lb = lb / ib / 100 * lb;
+int  a = 2;
+
+int main() {
+    int a, b, c, d;
 }

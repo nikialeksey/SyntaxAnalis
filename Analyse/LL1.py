@@ -1,5 +1,6 @@
 from Syntax import LexemId as lId
 from Semantic.SemanticTree import SemanticTree
+from Semantic.SemanticTree import Node
 
 
 class LL1Exception(Exception):
@@ -14,24 +15,29 @@ class LL1Exception(Exception):
 
 class LL1:
     def __init__(self, scanner):
-        self.semantic = SemanticTree()
+        self.semantic_tree = SemanticTree()
         self.scanner = scanner
+        self.past_lexeme_img = ''
         self.stack = []
         self.stack.append(lId.TEndFile)
         self.stack.append('main_program')
 
-        self.mydict = {
+        self.non_terminal_to_method = {
             'main_program': self.main_program, 'description': self.description, 'EV': self.EV, 'head_var': self.head_var,
             'EVF': self.EVF, 'PEVF': self.PEVF, 'param': self.param, 'body_function': self.body_function,
             'enum_operator': self.enum_operator, 'O': self.O, 'operator': self.operator, 'expression': self.expression,
             'A3': self.A3, 'A31': self.A31, 'A311': self.A311, 'A4': self.A4, 'A41': self.A41, 'A411': self.A411,
             'A5': self.A5, 'A51': self.A51, 'A511': self.A511, 'A6': self.A6, 'A61': self.A61, 'A611': self.A611,
             'A7': self.A7, 'A71': self.A71, 'A710': self.A710, 'A7110': self.A7110, 'EO': self.EO,
-            'enum_operand': self.enum_operand,
+            'enum_operand': self.enum_operand, 'write_current_type': self.write_current_type,
+            'verify_overlap': self.verify_overlap, 'create_var': self.create_var, 'create_special': self.create_special,
+            'reset_param_cnt': self.reset_param_cnt, 'write_param_cnt': self.write_param_cnt,
+            'out_from_block': self.out_from_block, 'inc_param_cnt': self.inc_param_cnt,
+            'find_var_in_tree': self.find_var_in_tree, 'verify_param_cnt': self.verify_param_cnt,
         }
 
     def __getitem__(self, item):
-        return self.mydict.get(item)
+        return self.non_terminal_to_method.get(item)
 
     def run(self):
         sc = self.scanner
@@ -43,35 +49,71 @@ class LL1:
                 if lexeme == l or (self.is_data_type(lexeme) and l == lId.TInt):
                     if l == lId.TEndFile:
                         break
+                    self.past_lexeme_img = self.scanner.lexeme
                     lexeme = sc.next_lexeme()
                 else:
                     raise LL1Exception(sc.get_pointer_line(), sc.get_pointer_position(),
                                "ожидалась конструкция " + lId.lexemIdToStr[l] + ", найдено " + str(sc.lexeme))
             else:
                 self[l](lexeme)
+            # print(str(self.stack) + ' ' + str(self.past_lexeme_img))
 
     def main_program(self, lexeme):
         if self.is_data_type(lexeme):
             self.stack.append('main_program')
             self.stack.append('description')
+            self.stack.append('create_var')
+            self.stack.append('verify_overlap')
             self.stack.append(lId.TId)
+            self.stack.append('write_current_type')
             self.stack.append(lId.TInt)
+
+    def write_current_type(self, lexeme):
+        ...
+
+    def verify_overlap(self, lexeme):
+        sc = self.scanner
+        if self.semantic_tree.is_overlay_lexeme(self.past_lexeme_img):
+            raise LL1Exception(sc.get_pointer_line(), sc.get_pointer_position(),
+                'лексема ' + self.past_lexeme_img + " используется второй раз"
+            )
+
+    def create_var(self, lexeme):
+        self.semantic_tree.add_neighbor(Node.VARIABLE, self.past_lexeme_img, 0)
 
     def description(self, lexeme):
         if lexeme == lId.TOpen:
+            self.stack.append('out_from_block')
             self.stack.append('body_function')
             self.stack.append(lId.TClose)
+            self.stack.append('write_param_cnt')
             self.stack.append('PEVF')
+            self.stack.append('reset_param_cnt')
             self.stack.append(lId.TOpen)
+            self.stack.append('create_special')
         else:
             self.stack.append(lId.TSemicolon)
             self.stack.append('EV')
             self.stack.append('head_var')
 
+    def create_special(self, lexeme):
+        ...
+
+    def reset_param_cnt(self, lexeme):
+        ...
+
+    def write_param_cnt(self, lexeme):
+        ...
+
+    def out_from_block(self, lexeme):
+        ...
+
     def EV(self, lexeme):
         if lexeme == lId.TComma:
             self.stack.append('EV')
             self.stack.append('head_var')
+            self.stack.append('create_var')
+            self.stack.append('verify_overlap')
             self.stack.append(lId.TId)
             self.stack.append(lId.TComma)
 
@@ -83,16 +125,23 @@ class LL1:
     def PEVF(self, lexeme):
         if self.is_data_type(lexeme):
             self.stack.append('EVF')
+            self.stack.append('inc_param_cnt')
             self.stack.append('param')
+
+    def inc_param_cnt(self, lexeme):
+        ...
 
     def EVF(self, lexeme):
         if lexeme == lId.TComma:
             self.stack.append('EVF')
+            self.stack.append('inc_param_cnt')
             self.stack.append('param')
             self.stack.append(lId.TComma)
 
     def param(self, lexeme):
         if self.is_data_type(lexeme):
+            self.stack.append('create_var')
+            self.stack.append('verify_overlap')
             self.stack.append(lId.TId)
             self.stack.append(lId.TInt)
         else:
@@ -101,9 +150,11 @@ class LL1:
 
     def body_function(self, lexeme):
         if lexeme == lId.TOpenFigure:
+            self.stack.append('out_from_block')
             self.stack.append(lId.TCloseFigure)
             self.stack.append('enum_operator')
             self.stack.append(lId.TOpenFigure)
+            self.stack.append('create_special')
         else:
             raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),\
                                "ожидался символ '{', найдено " + str(self.scanner.lexeme))
@@ -118,7 +169,10 @@ class LL1:
             self.stack.append(lId.TSemicolon)
             self.stack.append('EV')
             self.stack.append('head_var')
+            self.stack.append('create_var')
+            self.stack.append('verify_overlap')
             self.stack.append(lId.TId)
+            self.stack.append('write_current_type')
             self.stack.append(lId.TInt)
         else:
             self.stack.append('operator')
@@ -144,7 +198,11 @@ class LL1:
             self.stack.append(lId.TSemicolon)
             self.stack.append('expression')
             self.stack.append(lId.TAssign)
+            self.stack.append('find_var_in_tree')
             self.stack.append(lId.TId)
+
+    def find_var_in_tree(self, lexeme):
+        ...
 
     def expression(self, lexeme):
         self.stack.append('A31')
@@ -263,17 +321,24 @@ class LL1:
     def A7110(self, lexeme):
         if lexeme == lId.TOpen:
             self.stack.append(lId.TClose)
+            self.stack.append('verify_param_cnt')
             self.stack.append('EO')
+            self.stack.append('reset_param_cnt')
             self.stack.append(lId.TOpen)
+
+    def verify_param_cnt(self, lexeme):
+        ...
 
     def EO(self, lexeme):
         if lexeme != lId.TClose:
             self.stack.append('enum_operand')
+            self.stack.append('inc_param_cnt')
             self.stack.append('expression')
 
     def enum_operand(self, lexeme):
         if lexeme == lId.TComma:
             self.stack.append('enum_operand')
+            self.stack.append('inc_param_cnt')
             self.stack.append('expression')
             self.stack.append(lId.TComma)
 

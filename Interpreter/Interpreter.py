@@ -10,19 +10,19 @@ def to_type(value_obj, type):
 
     # TO DO привидение типов (нужно побитовое и)
     if type == lId.TShort:
-        value_obj.value = value_obj.value & ((1 << 16) - 1)
+        value_obj.value &= (1 << 16) - 1
         if value_obj.value & (1 << 16):
-            value_obj.value = value_obj.value & (1 << 16)
+            value_obj.value &= 1 << 16
             value_obj.value *= -1
     elif type == lId.TInt:
-        value_obj.value = value_obj.value & ((1 << 32) - 1)
+        value_obj.value &= (1 << 32) - 1
         if value_obj.value & (1 << 32):
-            value_obj.value = value_obj.value & (1 << 32)
+            value_obj.value &= 1 << 32
             value_obj.value *= -1
     else:
-        value_obj.value = value_obj.value & ((1 << 64) - 1)
+        value_obj.value &= (1 << 64) - 1
         if value_obj.value & (1 << 64):
-            value_obj.value = value_obj.value & (1 << 64)
+            value_obj.value &= 1 << 64
             value_obj.value *= -1
 
 def get_value_obj_num10(lexeme_num10):
