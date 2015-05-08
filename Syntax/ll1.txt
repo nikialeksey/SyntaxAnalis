@@ -1,0 +1,38 @@
+main_program ::= 'data_type' [write current data type] name_var [verify name var][create var in semantic tree] description main_program | e
+description ::= head_var EV ';' | [создать специальную вершину] '('[обнулить количество параметров] PEVF [записать количество параметров]')' body_function [выйти из блока]
+EV ::= ',' name_var [verify name var][create var in semantic tree] head_var EV | e
+head_var ::= '=' expression {создать триаду} | e
+
+PEVF ::= param [увеличить количество параметров] EVF | e
+EVF ::= ',' param [увеличить количество параметров] EVF | e
+param ::= 'data_type' name_var [verify name var][create var in semantic tree]
+
+body_function ::= [создать специальную вершину] '{' enum_operator '}' [выйти из блока]
+enum_operator ::= O enum_operator | e
+O ::= operator | 'data_type' [write current data type] name_var [verify name var][create var in semantic tree] head_var EV ';'
+operator ::= '{' enum_operator '}' | name_var [find var in tree] '=' expression ';' | 'do' operator 'while' '(' expression ')' ';' | 'return' expression ';' | ';'
+
+expression ::= A3 {запомнить первый операнд} A31
+A31 ::= A311 A3 {запомнить второй операнд} {создаем триаду} A31 | e
+A311 ::= '==' {запомнить операцию} | '!=' {запомнить операцию}
+
+A3 ::= A4 A41
+A41 ::= A411 A4 A41 | e
+A411 ::= '>' | '<' | '<=' | '>='
+
+A4 ::= A5 A51
+A51 ::= A511 A5 A51 | e
+A511 ::= '+' | '-'
+
+A5 ::= A6 A61
+A61 ::= A611 A6 A61 | e
+A611 ::= '*' | '\' | '%'
+
+A6 ::= A71 A7 | A7 
+A71 ::= '-' | '+' 
+A7 ::= '(' expression ')' | num10 | num16 | A710
+A710 ::= name_var A7110
+A7110 ::= '('[обнулить количество параметров] EO [проверить количество параметров]')' | e
+
+EO ::= expression [увеличить количество параметров] enum_operand | e
+enum_operand ::= ',' expression [увеличить количество параметров] enum_operand | e
