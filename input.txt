@@ -1,5 +1,5 @@
-int  a = 2;
+int  a = 2, b = 0, c = 3;
 
-int main() {
-    int a, b, c, d;
+int main(int a, int b) {
+    int a = b * c;
 }

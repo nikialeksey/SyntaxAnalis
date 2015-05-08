@@ -18,6 +18,9 @@ class LL1:
         self.semantic_tree = SemanticTree()
         self.scanner = scanner
         self.past_lexeme_img = ''
+        self.past_lexeme = 0
+        self.current_var = None
+        self.current_function = None
         self.stack = []
         self.stack.append(lId.TEndFile)
         self.stack.append('main_program')
@@ -33,7 +36,9 @@ class LL1:
             'verify_overlap': self.verify_overlap, 'create_var': self.create_var, 'create_special': self.create_special,
             'reset_param_cnt': self.reset_param_cnt, 'write_param_cnt': self.write_param_cnt,
             'out_from_block': self.out_from_block, 'inc_param_cnt': self.inc_param_cnt,
-            'find_var_in_tree': self.find_var_in_tree, 'verify_param_cnt': self.verify_param_cnt,
+            'find_var_for_assigning_in_tree': self.find_var_for_assigning_in_tree, 'verify_param_cnt': self.verify_param_cnt,
+            'change_type_to_func': self.change_type_to_func, 'find_node_with_lexeme': self.find_node_with_lexeme,
+            'verify_variable_node': self.verify_variable_node, 'verify_function_node': self.verify_function_node,
         }
 
     def __getitem__(self, item):
@@ -50,6 +55,7 @@ class LL1:
                     if l == lId.TEndFile:
                         break
                     self.past_lexeme_img = self.scanner.lexeme
+                    self.past_lexeme = lexeme
                     lexeme = sc.next_lexeme()
                 else:
                     raise LL1Exception(sc.get_pointer_line(), sc.get_pointer_position(),
@@ -69,17 +75,20 @@ class LL1:
             self.stack.append(lId.TInt)
 
     def write_current_type(self, lexeme):
-        ...
+        self.semantic_tree.set_current_type(self.past_lexeme)
 
     def verify_overlap(self, lexeme):
         sc = self.scanner
         if self.semantic_tree.is_overlay_lexeme(self.past_lexeme_img):
-            raise LL1Exception(sc.get_pointer_line(), sc.get_pointer_position(),
+            raise LL1Exception(
+                sc.get_pointer_line(),
+                sc.get_pointer_position(),
                 'лексема ' + self.past_lexeme_img + " используется второй раз"
             )
 
     def create_var(self, lexeme):
         self.semantic_tree.add_neighbor(Node.VARIABLE, self.past_lexeme_img, 0)
+        self.current_var = self.semantic_tree.pointer
 
     def description(self, lexeme):
         if lexeme == lId.TOpen:
@@ -91,22 +100,28 @@ class LL1:
             self.stack.append('reset_param_cnt')
             self.stack.append(lId.TOpen)
             self.stack.append('create_special')
+            self.stack.append('change_type_to_func')
         else:
             self.stack.append(lId.TSemicolon)
             self.stack.append('EV')
             self.stack.append('head_var')
 
+    def change_type_to_func(self, lexeme):
+        self.current_function = self.current_var
+        self.current_function.type_object = Node.FUNCTION
+        self.current_var = None
+
     def create_special(self, lexeme):
-        ...
+        self.semantic_tree.add_special()
 
     def reset_param_cnt(self, lexeme):
-        ...
+        self.semantic_tree.current_count_parameter = 0
 
     def write_param_cnt(self, lexeme):
-        ...
+        self.current_function.count_parameter = self.semantic_tree.current_count_parameter
 
     def out_from_block(self, lexeme):
-        ...
+        self.semantic_tree.go_out()
 
     def EV(self, lexeme):
         if lexeme == lId.TComma:
@@ -129,7 +144,7 @@ class LL1:
             self.stack.append('param')
 
     def inc_param_cnt(self, lexeme):
-        ...
+        self.semantic_tree.current_count_parameter += 1
 
     def EVF(self, lexeme):
         if lexeme == lId.TComma:
@@ -198,11 +213,18 @@ class LL1:
             self.stack.append(lId.TSemicolon)
             self.stack.append('expression')
             self.stack.append(lId.TAssign)
-            self.stack.append('find_var_in_tree')
+            self.stack.append('find_var_for_assigning_in_tree')
             self.stack.append(lId.TId)
 
-    def find_var_in_tree(self, lexeme):
-        ...
+    def find_var_for_assigning_in_tree(self, lexeme):
+        var_node = self.semantic_tree.get_variable_node(self.past_lexeme_img)
+        sc = self.scanner
+        if var_node == None:
+            raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
+                               "переменная " + str(self.past_lexeme_img) + " не найдена")
+        if var_node.type_object == Node.FUNCTION:
+            raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
+                               "функции " + str(self.past_lexeme_img) + " нельзя присвоить значение")
 
     def expression(self, lexeme):
         self.stack.append('A31')
@@ -316,7 +338,11 @@ class LL1:
 
     def A710(self, lexeme):
         self.stack.append('A7110')
+        self.stack.append('find_node_with_lexeme')
         self.stack.append(lId.TId)
+
+    def find_node_with_lexeme(self, lexeme):
+        self.current_var = self.semantic_tree.get_variable_node(self.past_lexeme_img)
 
     def A7110(self, lexeme):
         if lexeme == lId.TOpen:
@@ -325,9 +351,34 @@ class LL1:
             self.stack.append('EO')
             self.stack.append('reset_param_cnt')
             self.stack.append(lId.TOpen)
+            self.stack.append('verify_function_node')
+        else:
+            self.stack.append('verify_variable_node')
+
+    def verify_variable_node(self, lexeme):
+        if self.current_var is None:
+            raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
+                               "переменная " + self.past_lexeme_img + " не определена")
+        if self.current_var.type_object != Node.VARIABLE:
+            raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
+                               "функцию " + self.past_lexeme_img + " нельзя использовать как переменную")
+
+    def verify_function_node(self, lexeme):
+        if self.current_var is None:
+            raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
+                               "функция " + self.past_lexeme_img + " не определена")
+
+        if self.current_var.type_object != Node.FUNCTION:
+            raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
+                               "переменную " + self.past_lexeme_img + " нельзя использовать как функцию")
+        else:
+            self.current_function = self.current_var
+            self.current_var = None
 
     def verify_param_cnt(self, lexeme):
-        ...
+        if self.current_function.count_parameter != self.semantic_tree.current_count_parameter:
+            raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
+                               "неверное количество параметров у функции " + self.current_function.lexeme)
 
     def EO(self, lexeme):
         if lexeme != lId.TClose:

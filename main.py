@@ -1,5 +1,6 @@
 from Syntax.Scanner import Scanner
 from Analyse.LL1 import LL1
+from Analyse.DescendingAnalyse import DescendingAnalyse
 from subprocess import call
 
 program_file = open("input.txt", "r")
@@ -11,13 +12,15 @@ program_file.close()
 
 scanner = Scanner(program)
 syntax = LL1(scanner)
+# syntax = DescendingAnalyse(scanner)
 
 try:
     syntax.run()
+    # syntax.main_program()
 except Exception as e:
     print(e)
 else:
     print('Синтаксис не содержит ошибок')
 
-# syntax.semantic_tree.write('semantic.dot')
-# call(["C:\\Python27\\python.exe", "draw_semantic_graph.py"])
+syntax.semantic_tree.write('semantic.dot')
+call(["C:\\Python27\\python.exe", "draw_semantic_graph.py"])
