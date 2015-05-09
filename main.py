@@ -3,7 +3,7 @@ from Analyse.LL1 import LL1
 from Analyse.DescendingAnalyse import DescendingAnalyse
 from subprocess import call
 
-program_file = open("input.txt", "r")
+program_file = open("input.txt")
 program = ""
 for line in program_file:
     program += line
@@ -22,5 +22,5 @@ except Exception as e:
 else:
     print('Синтаксис не содержит ошибок')
 
-syntax.semantic_tree.write('semantic.dot')
-call(["C:\\Python27\\python.exe", "draw_semantic_graph.py"])
+# syntax.semantic_tree.write('semantic.dot')
+# call(["C:\\Python27\\python.exe", "draw_semantic_graph.py"])
