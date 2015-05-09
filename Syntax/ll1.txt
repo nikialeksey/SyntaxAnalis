@@ -1,7 +1,7 @@
-main_program ::= 'data_type' [write current data type] name_var [verify name var][create var in semantic tree] description main_program | e
+main_program ::= 'data_type' [write current data type] name_var [verify name var][create var in semantic tree] {to R} description main_program | e
 description ::= head_var EV ';' | [изменить тип текущей переменной на функцию][создать специальную вершину] '('[обнулить количество параметров] PEVF [записать количество параметров]')' body_function [выйти из блока]
-EV ::= ',' name_var [verify name var][create var in semantic tree] head_var EV | e
-head_var ::= '=' expression {создать триаду} | e
+EV ::= ',' name_var [verify name var][create var in semantic tree] {to R} head_var EV | e
+head_var ::= '=' expression {создать триаду = } | e
 
 PEVF ::= param [увеличить количество параметров] EVF | e
 EVF ::= ',' param [увеличить количество параметров] EVF | e
@@ -9,8 +9,8 @@ param ::= 'data_type' name_var [verify name var][create var in semantic tree]
 
 body_function ::= [создать специальную вершину] '{' enum_operator '}' [выйти из блока]
 enum_operator ::= O enum_operator | e
-O ::= operator | 'data_type' [write current data type] name_var [verify name var][create var in semantic tree] head_var EV ';'
-operator ::= '{' enum_operator '}' | name_var [find var for assigning in tree] '=' expression ';' | 'do' operator 'while' '(' expression ')' ';' | 'return' expression ';' | ';'
+O ::= operator | 'data_type' [write current data type] name_var [verify name var][create var in semantic tree] {to R} head_var EV ';'
+operator ::= '{' enum_operator '}' | name_var [find var for assigning in tree] {to R} '=' expression {создать триаду = }';' | 'do' operator 'while' '(' expression ')' ';' | 'return' expression ';' | ';'
 
 expression ::= A3 A31
 A31 ::= '==' A3 {создать триаду == } {to R} A31 | '!=' A3 {создать триаду != } {to R} A31 | e
@@ -25,7 +25,7 @@ A5 ::= A6 A61
 A61 ::= '*' A6 {создать триаду * } {to R} A61 | '/' A6 {создать триаду / } {to R} A61 | '%' A6 {создать триаду % } {to R} A61 | e
 
 A6 ::= '-' A7 {создать триаду унарную - } {to R} | '+' {создать триаду унарную + } {to R} A7 | A7 
-A7 ::= '(' expression ')' {to R} | num10 {to R} | num16 {to R} | A710 
+A7 ::= '(' expression ')' | num10 {to R} | num16 {to R} | A710 
 A710 ::= name_var [найти ноду с такой же лексемой] A7110
 A7110 ::= [проверить, что найденная нода - функция]'('[обнулить количество параметров] EO [проверить количество параметров]')' | [проверить, что найденная нода - переменная] {положить переменную в стек} e
 

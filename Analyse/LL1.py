@@ -87,6 +87,7 @@ class LL1:
         if self.is_data_type(lexeme):
             self.stack.append('main_program')
             self.stack.append('description')
+            self.stack.append('add_lexeme_to_R')
             self.stack.append('create_var')
             self.stack.append('verify_overlap')
             self.stack.append(lId.TId)
@@ -113,6 +114,7 @@ class LL1:
         if lexeme == lId.TComma:
             self.stack.append('EV')
             self.stack.append('head_var')
+            self.stack.append('add_lexeme_to_R')
             self.stack.append('create_var')
             self.stack.append('verify_overlap')
             self.stack.append(lId.TId)
@@ -120,6 +122,7 @@ class LL1:
 
     def head_var(self, lexeme):
         if lexeme == lId.TAssign:
+            self.stack.append('print_assign_trio')
             self.stack.append('expression')
             self.stack.append(lId.TAssign)
 
@@ -128,9 +131,6 @@ class LL1:
             self.stack.append('EVF')
             self.stack.append('inc_param_cnt')
             self.stack.append('param')
-
-    def inc_param_cnt(self, lexeme):
-        self.semantic_tree.current_count_parameter += 1
 
     def EVF(self, lexeme):
         if lexeme == lId.TComma:
@@ -170,6 +170,7 @@ class LL1:
             self.stack.append(lId.TSemicolon)
             self.stack.append('EV')
             self.stack.append('head_var')
+            self.stack.append('add_lexeme_to_R')
             self.stack.append('create_var')
             self.stack.append('verify_overlap')
             self.stack.append(lId.TId)
@@ -197,8 +198,10 @@ class LL1:
             self.stack.append(lId.TSemicolon)
         else:
             self.stack.append(lId.TSemicolon)
+            self.stack.append('print_assign_trio')
             self.stack.append('expression')
             self.stack.append(lId.TAssign)
+            self.stack.append('add_lexeme_to_R')
             self.stack.append('find_var_for_assigning_in_tree')
             self.stack.append(lId.TId)
 
@@ -342,6 +345,9 @@ class LL1:
     # +++++++++++++++++++++
     #      СЕМАНТИКА
     # +++++++++++++++++++++
+
+    def inc_param_cnt(self, lexeme):
+        self.semantic_tree.current_count_parameter += 1
 
     def verify_variable_node(self, lexeme):
         if self.current_var is None:
