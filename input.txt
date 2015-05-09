@@ -1,5 +1,1 @@
-int  a = 2, b = 0, c = 3;
-
-int main(int a, int b) {
-    int a = b * c;
-}
+int  a = 2 + 3;

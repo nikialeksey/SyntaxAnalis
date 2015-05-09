@@ -234,16 +234,10 @@ class LL1:
         if lexeme == lId.TEq or lexeme == lId.TUnEq:
             self.stack.append('A31')
             self.stack.append('A3')
-            self.stack.append('A311')
-
-    def A311(self, lexeme):
-        if lexeme == lId.TEq:
-            self.stack.append(lId.TEq)
-        elif lexeme == lId.TUnEq:
-            self.stack.append(lId.TUnEq)
-        else:
-            raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
-                               "ожидалась операция эквивалентности (==, !=), найдено " + str(self.scanner.lexeme))
+            if lexeme == lId.TEq:
+                self.stack.append(lId.TEq)
+            elif lexeme == lId.TUnEq:
+                self.stack.append(lId.TUnEq)
 
     def A3(self, lexeme):
         self.stack.append('A41')
@@ -253,20 +247,14 @@ class LL1:
         if lexeme == lId.TLess or lexeme == lId.TLessEq or lexeme == lId.TGreater or lexeme == lId.TGreaterEq:
             self.stack.append('A41')
             self.stack.append('A4')
-            self.stack.append('A411')
-
-    def A411(self, lexeme):
-        if lexeme == lId.TLess:
-            self.stack.append(lId.TLess)
-        elif lexeme == lId.TLessEq:
-            self.stack.append(lId.TLessEq)
-        elif lexeme == lId.TGreater:
-            self.stack.append(lId.TGreater)
-        elif lexeme == lId.TGreaterEq:
-            self.stack.append(lId.TGreaterEq)
-        else:
-            raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
-                               "ожидалась операция сравнения (<,>,<=,>=), найдено " + str(self.scanner.lexeme))
+            if lexeme == lId.TLess:
+                self.stack.append(lId.TLess)
+            elif lexeme == lId.TLessEq:
+                self.stack.append(lId.TLessEq)
+            elif lexeme == lId.TGreater:
+                self.stack.append(lId.TGreater)
+            elif lexeme == lId.TGreaterEq:
+                self.stack.append(lId.TGreaterEq)
 
     def A4(self, lexeme):
         self.stack.append('A51')
@@ -276,16 +264,10 @@ class LL1:
         if lexeme == lId.TPlus or lexeme == lId.TMinus:
             self.stack.append('A51')
             self.stack.append('A5')
-            self.stack.append('A511')
-
-    def A511(self, lexeme):
-        if lexeme == lId.TPlus:
-            self.stack.append(lId.TPlus)
-        elif lexeme == lId.TMinus:
-            self.stack.append(lId.TMinus)
-        else:
-            raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
-                               "ожидалась знаковая операция (+, -), найдено " + str(self.scanner.lexeme))
+            if lexeme == lId.TPlus:
+                self.stack.append(lId.TPlus)
+            elif lexeme == lId.TMinus:
+                self.stack.append(lId.TMinus)
 
     def A5(self, lexeme):
         self.stack.append('A61')
@@ -295,34 +277,22 @@ class LL1:
         if lexeme == lId.TMul or lexeme == lId.TDiv or lexeme == lId.TMod:
             self.stack.append('A61')
             self.stack.append('A6')
-            self.stack.append('A611')
-
-    def A611(self, lexeme):
-        if lexeme == lId.TMul:
-            self.stack.append(lId.TMul)
-        elif lexeme == lId.TDiv:
-            self.stack.append(lId.TDiv)
-        elif lexeme == lId.TMod:
-            self.stack.append(lId.TMod)
-        else:
-            raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
-                               "ожидалась операция умножения или деления (/, *, %), найдено " + str(self.scanner.lexeme))
+            if lexeme == lId.TMul:
+                self.stack.append(lId.TMul)
+            elif lexeme == lId.TDiv:
+                self.stack.append(lId.TDiv)
+            elif lexeme == lId.TMod:
+                self.stack.append(lId.TMod)
 
     def A6(self, lexeme):
         if lexeme == lId.TPlus or lexeme == lId.TMinus:
             self.stack.append('A7')
-            self.stack.append('A71')
+            if lexeme == lId.TPlus:
+                self.stack.append(lId.TPlus)
+            elif lexeme == lId.TMinus:
+                self.stack.append(lId.TMinus)
         else:
             self.stack.append('A7')
-
-    def A71(self, lexeme):
-        if lexeme == lId.TPlus:
-            self.stack.append(lId.TPlus)
-        elif lexeme == lId.TMinus:
-            self.stack.append(lId.TMinus)
-        else:
-            raise LL1Exception(self.scanner.get_pointer_line(), self.scanner.get_pointer_position(),
-                               "ожидалась операция знаковая ( +, -), найдено " + str(self.scanner.lexeme))
 
     def A7(self, lexeme):
         if lexeme == lId.TOpen:
