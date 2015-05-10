@@ -28,6 +28,11 @@ class LL1:
         self.R = []
         self.number_trio = 0
 
+        self.tmp_stack = []
+
+        self.label_stack = []
+        self.number_label = 0
+
         self.non_terminal_to_method = {
             'main_program': self.main_program, 'description': self.description, 'EV': self.EV, 'head_var': self.head_var,
             'EVF': self.EVF, 'PEVF': self.PEVF, 'param': self.param, 'body_function': self.body_function,
@@ -58,6 +63,12 @@ class LL1:
             'print_mul_trio': self.print_mul_trio, 'print_plus_trio': self.print_plus_trio,
             'print_unary_minus_trio': self.print_unary_minus_trio, 'print_unary_plus_trio': self.print_unary_plus_trio,
             'print_eq_trio': self.print_eq_trio, 'print_uneq_trio': self.print_uneq_trio,
+            'print_proc_trio': self.print_proc_trio, 'print_endp_trio': self.print_endp_trio,
+            'print_pop_name_var_trio': self.print_pop_name_var_trio, 'print_tmp_stack': self.print_tmp_stack,
+            'print_call_trio': self.print_call_trio, 'print_push_var_trio': self.print_push_var_trio,
+            'print_label_trio': self.print_label_trio, 'remove_label_from_stack': self.remove_label_from_stack,
+            'print_test_jg_trio': self.print_test_jg_trio, 'print_return_trio': self.print_return_trio,
+
         }
 
     def __getitem__(self, item):
@@ -96,13 +107,16 @@ class LL1:
 
     def description(self, lexeme):
         if lexeme == lId.TOpen:
+            self.stack.append('print_endp_trio')
             self.stack.append('out_from_block')
             self.stack.append('body_function')
             self.stack.append(lId.TClose)
+            self.stack.append('print_tmp_stack')
             self.stack.append('write_param_cnt')
             self.stack.append('PEVF')
             self.stack.append('reset_param_cnt')
             self.stack.append(lId.TOpen)
+            self.stack.append('print_proc_trio')
             self.stack.append('create_special')
             self.stack.append('change_type_to_func')
         else:
@@ -141,6 +155,7 @@ class LL1:
 
     def param(self, lexeme):
         if self.is_data_type(lexeme):
+            self.stack.append('print_pop_name_var_trio')
             self.stack.append('create_var')
             self.stack.append('verify_overlap')
             self.stack.append(lId.TId)
@@ -183,15 +198,19 @@ class LL1:
         if lexeme == lId.TOpenFigure:
             self.stack.append('body_function')
         elif lexeme == lId.TDo:
+            self.stack.append('remove_label_from_stack')
             self.stack.append(lId.TSemicolon)
             self.stack.append(lId.TClose)
+            self.stack.append('print_test_jg_trio')
             self.stack.append('expression')
             self.stack.append(lId.TOpen)
             self.stack.append(lId.TWhile)
             self.stack.append('operator')
+            self.stack.append('print_label_trio')
             self.stack.append(lId.TDo)
         elif lexeme == lId.TReturn:
             self.stack.append(lId.TSemicolon)
+            self.stack.append('print_return_trio')
             self.stack.append('expression')
             self.stack.append(lId.TReturn)
         elif lexeme == lId.TSemicolon:
@@ -320,6 +339,7 @@ class LL1:
 
     def A7110(self, lexeme):
         if lexeme == lId.TOpen:
+            self.stack.append('print_call_trio')
             self.stack.append(lId.TClose)
             self.stack.append('verify_param_cnt')
             self.stack.append('EO')
@@ -327,17 +347,20 @@ class LL1:
             self.stack.append(lId.TOpen)
             self.stack.append('verify_function_node')
         else:
+            self.stack.append('add_lexeme_to_R')
             self.stack.append('verify_variable_node')
 
     def EO(self, lexeme):
         if lexeme != lId.TClose:
             self.stack.append('enum_operand')
+            self.stack.append('print_push_var_trio')
             self.stack.append('inc_param_cnt')
             self.stack.append('expression')
 
     def enum_operand(self, lexeme):
         if lexeme == lId.TComma:
             self.stack.append('enum_operand')
+            self.stack.append('print_push_var_trio')
             self.stack.append('inc_param_cnt')
             self.stack.append('expression')
             self.stack.append(lId.TComma)
@@ -482,6 +505,56 @@ class LL1:
         op = self.R.pop()
         print(str(self.number_trio) + ') ' + str(operation) + ' ' + str(op))
         self.number_trio += 1
+
+    def print_proc_trio(self, lexeme):
+        self.outer_fun = self.past_lexeme_img
+        print(str(self.number_trio) + ') proc ' + self.past_lexeme_img)
+        self.number_trio += 1
+
+    def print_endp_trio(self, lexeme):
+        print(str(self.number_trio) + ') endp ' + self.outer_fun)
+        print()
+        self.number_trio += 1
+
+    def print_pop_name_var_trio(self, lexeme):
+        self.tmp_stack.append(self.past_lexeme_img)
+        # print(str(self.number_trio) + ') pop ' + self.past_lexeme_img)
+        # self.number_trio += 1
+
+    def print_tmp_stack(self, lexeme):
+        while len(self.tmp_stack) > 0:
+            print(str(self.number_trio) + ') pop ' + self.tmp_stack.pop())
+            self.number_trio += 1
+
+    def print_call_trio(self, lexeme):
+        print(str(self.number_trio) + ') call ' + self.current_function.lexeme)
+        self.R.append('(' + str(self.number_trio) + ')')
+        self.number_trio += 1
+
+    def print_push_var_trio(self, lexeme):
+        print(str(self.number_trio) + ') push ' + self.R.pop())
+        self.number_trio += 1
+
+    def print_label_trio(self, lexeme):
+        print(str(self.number_trio) + ') label' + str(self.number_label) + ':')
+        self.label_stack.append(self.number_label)
+        self.number_trio += 1
+        self.number_label += 1
+
+    def print_test_jg_trio(self, lexeme):
+        op = self.R.pop()
+        print(str(self.number_trio) + ') test ' + op + ', ' + op)
+        self.number_trio += 1
+        print(str(self.number_trio) + ') jg label' + str(self.label_stack[-1]))
+        self.number_trio += 1
+
+    def remove_label_from_stack(self, lexeme):
+        self.label_stack.pop()
+
+    def print_return_trio(self, lexeme):
+        print(str(self.number_trio) + ') return ' + str(self.R.pop()))
+        self.number_trio += 1
+
 
     @staticmethod
     def is_terminal(l):
