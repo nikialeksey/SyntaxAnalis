@@ -1,6 +1,6 @@
 
 int main(int a, int b, int c, int d) {
-    int  a = 2 + 3 <= 2 * 9 / 0;
+    int  e = 2 + 3 <= 2 * 9 / 0;
     do {
         int b = 1 + 2;
         do {
