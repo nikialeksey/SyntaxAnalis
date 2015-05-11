@@ -1,3 +1,4 @@
+from matplotlib.rcsetup import validate_nseq_float
 from Syntax import LexemId as lId
 from Semantic.SemanticTree import SemanticTree
 from Semantic.SemanticTree import Node
@@ -68,8 +69,8 @@ class LL1:
             'print_call_trio': self.print_call_trio, 'print_push_var_trio': self.print_push_var_trio,
             'print_label_trio': self.print_label_trio, 'remove_label_from_stack': self.remove_label_from_stack,
             'print_test_jg_trio': self.print_test_jg_trio, 'print_return_trio': self.print_return_trio,
-
         }
+        self.trio_file = None
 
     def __getitem__(self, item):
         return self.non_terminal_to_method.get(item)
@@ -77,6 +78,7 @@ class LL1:
     def run(self):
         sc = self.scanner
         lexeme = sc.next_lexeme()
+        self.trio_file = open('trio.txt', 'w')
         while True:
             l = self.stack.pop()
             # print('stack: ' + str(l) + " lexeme: " + str(lexeme))
@@ -93,6 +95,7 @@ class LL1:
             else:
                 self[l](lexeme)
             # print(str(self.stack) + ' ' + str(self.past_lexeme_img))
+        self.trio_file.close()
 
     def main_program(self, lexeme):
         if self.is_data_type(lexeme):
@@ -499,20 +502,24 @@ class LL1:
         op2 = self.R.pop()
         op1 = self.R.pop()
         print(str(self.number_trio) + ') ' + str(op1) + ' ' + str(operation) + ' ' + str(op2))
+        self.trio_file.write(str(self.number_trio) + ') ' + str(op1) + ' ' + str(operation) + ' ' + str(op2) + '\n')
         self.number_trio += 1
 
     def print_unary_trio(self, operation):
         op = self.R.pop()
         print(str(self.number_trio) + ') ' + str(operation) + ' ' + str(op))
+        self.trio_file.write(str(self.number_trio) + ') ' + str(operation) + ' ' + str(op) + '\n')
         self.number_trio += 1
 
     def print_proc_trio(self, lexeme):
         self.outer_fun = self.past_lexeme_img
         print(str(self.number_trio) + ') proc ' + self.past_lexeme_img)
+        self.trio_file.write(str(self.number_trio) + ') proc ' + self.past_lexeme_img + '\n')
         self.number_trio += 1
 
     def print_endp_trio(self, lexeme):
         print(str(self.number_trio) + ') endp ' + self.outer_fun)
+        self.trio_file.write(str(self.number_trio) + ') endp ' + self.outer_fun + '\n')
         print()
         self.number_trio += 1
 
@@ -523,20 +530,26 @@ class LL1:
 
     def print_tmp_stack(self, lexeme):
         while len(self.tmp_stack) > 0:
-            print(str(self.number_trio) + ') pop ' + self.tmp_stack.pop())
+            a = self.tmp_stack.pop()
+            print(str(self.number_trio) + ') pop ' + a)
+            self.trio_file.write(str(self.number_trio) + ') pop ' + a + '\n')
             self.number_trio += 1
 
     def print_call_trio(self, lexeme):
         print(str(self.number_trio) + ') call ' + self.current_function.lexeme)
+        self.trio_file.write(str(self.number_trio) + ') call ' + self.current_function.lexeme + '\n')
         self.R.append('(' + str(self.number_trio) + ')')
         self.number_trio += 1
 
     def print_push_var_trio(self, lexeme):
-        print(str(self.number_trio) + ') push ' + self.R.pop())
+        a = self.R.pop()
+        print(str(self.number_trio) + ') push ' + a)
+        self.trio_file.write(str(self.number_trio) + ') push ' + a + '\n')
         self.number_trio += 1
 
     def print_label_trio(self, lexeme):
         print(str(self.number_trio) + ') label' + str(self.number_label) + ':')
+        self.trio_file.write(str(self.number_trio) + ') label' + str(self.number_label) + ':' + '\n')
         self.label_stack.append(self.number_label)
         self.number_trio += 1
         self.number_label += 1
@@ -544,17 +557,67 @@ class LL1:
     def print_test_jg_trio(self, lexeme):
         op = self.R.pop()
         print(str(self.number_trio) + ') test ' + op + ', ' + op)
+        self.trio_file.write(str(self.number_trio) + ') test ' + op + ', ' + op + '\n')
         self.number_trio += 1
         print(str(self.number_trio) + ') jg label' + str(self.label_stack[-1]))
+        self.trio_file.write(str(self.number_trio) + ') jg label' + str(self.label_stack[-1]) + '\n')
         self.number_trio += 1
 
     def remove_label_from_stack(self, lexeme):
         self.label_stack.pop()
 
     def print_return_trio(self, lexeme):
-        print(str(self.number_trio) + ') return ' + str(self.R.pop()))
+        a = self.R.pop()
+        print(str(self.number_trio) + ') return ' + str(a))
+        self.trio_file.write(str(self.number_trio) + ') return ' + str(a) + '\n')
         self.number_trio += 1
 
+    def linear_optimize(self):
+        self.trio_file = open('trio.txt')
+        optimized_trio_file = open('optimized_trio.txt', 'w')
+
+        distinct_lines = {}
+        repeated_lines = {}
+        for line in self.trio_file:
+            num = line.split(')')[0]
+            value = line[line.index(')') + 2:]
+
+            is_write_line = False
+            if value not in distinct_lines.keys():
+                distinct_lines[value] = num
+                is_write_line = True
+            else:
+                repeated_lines[num] = distinct_lines[value]
+
+            for real_num, good_num in repeated_lines.items():
+                line = line.replace('(' + real_num + ')', '(' + good_num + ')')
+
+            if is_write_line:
+                optimized_trio_file.write(line)
+
+        optimized_trio_file.close()
+        self.trio_file.close()
+
+    def cycle_optimization(self):
+        # self.trio_file = open('trio.txt')
+        # optimized_trio_file = open('optimized_trio.txt', 'w')
+        #
+        # is_cycle = 0
+        # for line in self.trio_file:
+        #     num = line.split(')')[0]
+        #     value = line[line.index(')') + 2:]
+        #     if 'label' in value and value[-2] == ':':
+        #         is_cycle += 1
+        #
+        #     if 'jg' in value:
+        #         is_cycle -= 1
+        #
+        #     if is_cycle > 0:
+        #
+        #
+        # optimized_trio_file.close()
+        # self.trio_file.close()
+        ...
 
     @staticmethod
     def is_terminal(l):
